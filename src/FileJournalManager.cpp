@@ -11,7 +11,7 @@
 #include </usr/local/include/boost/regex.hpp>
 #include "../util/Constants.h"
 #include "../util/Logger.h"
-#include <stdio.h>
+#include <algorithm>
 
 namespace JournalServiceServer
 {
@@ -21,24 +21,29 @@ FileJournalManager::~FileJournalManager()
     // TODO Auto-generated destructor stub
 }
 
-//vector<EditLogFile>
-//FileJournalManager::getLogFiles(long fromTxId){
-//    string currentDir = jnStorage.getCurrentDir();
-//    List<EditLogFile> allLogFiles = matchEditLogs(currentDir);
-//    List<EditLogFile> logFiles = Lists.newArrayList();
-//
+void
+FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
+    string currentDir = jnStorage.getCurrentDir();
+    vector<EditLogFile> allLogFiles;
+    matchEditLogs(currentDir, allLogFiles);
+//    vector<EditLogFile> logFiles;
+
 //    for (EditLogFile elf : allLogFiles) {
 //      if (fromTxId <= elf.getFirstTxId() ||
 //          elf.containsTxId(fromTxId)) {
-//        logFiles.add(elf);
+//        logFiles.push_back(elf);
 //      }
 //    }
-//
-//    Collections.sort(logFiles, EditLogFile.COMPARE_BY_START_TXID);
-//
-//    return logFiles;
-//  }
-//
+
+    for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
+        if (fromTxId <= (*it).getFirstTxId() ||
+                (*it).containsTxId(fromTxId)) {
+            ret.push_back(*it);
+        }
+    }
+
+    sort(ret.begin(), ret.end());
+}
 
 
 int
@@ -63,7 +68,7 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
         //TODO : Assuming that compiler will initialize result to zero by default
         return 0;
     } else if (retEditLogFile.size() == 1) {
-        result = retEditLogFile.front();  //  copy constructor
+        result = retEditLogFile.front();  //  copy constructor is getting called here
         //retEditLogFile.front();
         return 0;
     }
@@ -134,4 +139,13 @@ int main() {
     }else {
         cout << "result code is non zero" << endl;
     }
+
+
+    vector<JournalServiceServer::EditLogFile> elfv;
+    fjm.getLogFiles(1, elfv);
+
+    for (vector<JournalServiceServer::EditLogFile>::iterator it = elfv.begin(); it != elfv.end(); ++it) {
+        cout << "edit log file name is '" << (*it).getFile() << "'" << endl;
+    }
+
 }

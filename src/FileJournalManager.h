@@ -36,6 +36,7 @@ public:
     virtual ~FileJournalManager();
 
     vector<EditLogFile> getLogFiles(long fromTxId);
+    void getLogFiles(long fromTxId, vector<EditLogFile>& ret);
     int getLogFile(long startTxId, EditLogFile&);
     int getLogFile(string dir, long startTxId, EditLogFile&);
 

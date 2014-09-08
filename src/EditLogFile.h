@@ -98,6 +98,10 @@ public:
           return corruptHeader;
         }
 
+        const bool operator<(const EditLogFile &other) const;
+        const bool operator>(const EditLogFile &other) const;
+        const bool operator==(const EditLogFile &other) const;
+
 private :
     string file;
     // firstTxId is supposed to be a constant
