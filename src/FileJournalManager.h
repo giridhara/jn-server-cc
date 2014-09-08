@@ -31,7 +31,8 @@ class FileJournalManager
 public:
     FileJournalManager(JNStorage& storage)
         :
-            jnStorage(storage)
+            jnStorage(storage),
+            currentInProgress()
     {}
     virtual ~FileJournalManager();
 
@@ -44,9 +45,12 @@ public:
 
     void matchEditLogs(const vector<string>& filesInStorage, vector<EditLogFile>& ret);
 
+    int finalizeLogSegment(long firstTxId, long lastTxId);
+
 private:
 
     JNStorage& jnStorage;
+    string currentInProgress;
 };
 
 } /* namespace JournalServiceServer */

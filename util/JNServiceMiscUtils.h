@@ -25,8 +25,10 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <fstream>
 #include <iomanip>
 #include "Constants.h"
+#include <stdio.h>
 
 using namespace std;
 using std::string;
@@ -64,6 +66,19 @@ string getFinalizedEditsFile(string currentDir,
     long startTxId, long endTxId) {
     return string(currentDir + "/" +
         getFinalizedEditsFileName(startTxId, endTxId));
+}
+
+const bool file_exists(const string& name) {
+    ifstream ifs (name.c_str());
+    if(!ifs.is_open()) {
+        return false;
+    }
+    ifs.close();
+    return true;
+}
+
+const int file_rename(const string& from, const string& to ) {
+    return rename(from.c_str(), to.c_str());
 }
 
 }

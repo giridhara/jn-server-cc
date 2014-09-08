@@ -6,6 +6,7 @@
  */
 
 #include "FileJournalManager.h"
+#include "../util/JNServiceMiscUtils.h"
 #include <stdlib.h>
 #include "/usr/local/include/boost/filesystem/operations.hpp"
 #include </usr/local/include/boost/regex.hpp>
@@ -19,6 +20,31 @@ namespace JournalServiceServer
 FileJournalManager::~FileJournalManager()
 {
 }
+
+
+int
+FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
+    string inProgressFile = getInProgressEditsFile(jnStorage.getCurrentDir(), firstTxId);
+    string dstFile = getFinalizedEditsFile(jnStorage.getCurrentDir(), firstTxId, lastTxId);
+    LOG.info("Finalizing edits file %s -> %s" , inProgressFile.c_str() , dstFile.c_str() );
+    if (file_exists(dstFile)) {
+        LOG.error("Can't finalize edits file %s since finalized file already exists", dstFile.c_str());
+        return -1;
+    }
+
+    int rc = file_rename(inProgressFile, dstFile);
+
+    if(rc != 0 ) {
+        LOG.error("Can't rename file %s to %s" , inProgressFile.c_str() , dstFile.c_str());
+        return -1;
+    }
+
+    if(inProgressFile ==  currentInProgress)
+        currentInProgress="";
+
+    return 0;
+}
+
 
 void
 FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
