@@ -1,0 +1,112 @@
+/*
+ * JNStorage.h
+ *
+ *  Created on: Sep 1, 2014
+ *      Author: psarda
+ */
+
+#ifndef JNSTORAGE_H_
+#define JNSTORAGE_H_
+
+#include <boost/regex.hpp>
+#include </usr/local/include/boost/filesystem/operations.hpp>
+#include <sstream>
+#include <fstream>
+#include "../util/StorageInfo.h"
+#include "../util/NamespaceInfo.h"
+#include "../util/Constants.h"
+
+namespace JournalServiceServer
+{
+
+using std::ostringstream;
+using std::string;
+using std::ofstream;
+
+class JNStorage : public StorageInfo
+{
+
+public:
+    JNStorage(string logDir) :
+        logDir(logDir),
+        currentDir(logDir + "/" + "current")
+    {
+//        ostringstream strm;
+//        strm << logDir + "/" + "current";
+//        currentDir(strm.str());
+        state = NORMAL;
+    }
+    virtual ~JNStorage() {}
+
+    string getInProgressEditLog(long startTxId) {
+        ostringstream ostr;
+        ostr << logDir << "/" << "edits_inprogress_" << startTxId;
+        return ostr.str();
+    }
+
+    string getPaxosFile(long segmentTxId) {
+        ostringstream ostr;
+        ostr << getPaxosDir() << "/" << segmentTxId;
+        return ostr.str();
+    }
+
+    string getPaxosDir() {
+        ostringstream ostr;
+        ostr << logDir << "/"  << "paxos";
+        return ostr.str();
+    }
+
+    int format(const NamespaceInfo& nsInfo);
+
+    string getCurrentDir() {
+          return currentDir;
+    }
+
+    int createPaxosDir() {
+        boost::system::error_code error;
+        boost::filesystem::path dir(getPaxosDir());
+        boost::filesystem::create_directories(dir, error);
+        if (error) {
+            return -1;
+        }
+        return 0;
+    }
+
+    string getVersionFile() {
+        ostringstream ostr;
+        ostr << currentDir  << "/" << STORAGE_FILE_VERSION;
+        return ostr.str();
+    }
+
+    int clearLogDirectory();
+
+    int writeProperties(string to);
+
+    bool isFormatted() {
+        return state == NORMAL;
+    }
+
+    int checkConsistentNamespace(NamespaceInfo nsInfo);
+
+private:
+    int findFinalizedEditsFile(long startTxId, long endTxId, string& res) {
+        ostringstream ostr;
+        ostr << logDir << "/" << "edits_" << startTxId << "_" << endTxId;
+        boost::system::error_code error;
+        boost::filesystem::exists(ostr.str().c_str(), error);
+        if (error) {
+            return -1;
+        }
+
+        res = ostr.str();
+        return 0;
+    }
+
+    const string logDir;
+    const string currentDir;
+    StorageState state;
+};
+
+} /* namespace JournalServiceServer */
+
+#endif /* JNSTORAGE_H_ */
