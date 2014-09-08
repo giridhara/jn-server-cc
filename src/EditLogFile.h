@@ -47,6 +47,13 @@ public:
       lastTxId = other.lastTxId;
       corruptHeader = other.corruptHeader;
     }
+    EditLogFile():
+        file(""),
+        firstTxId(-1),
+        lastTxId(-1),
+        inProgress(false),
+        corruptHeader(false)
+    {}
 
     virtual ~EditLogFile() {}
 
@@ -94,10 +101,10 @@ public:
 private :
     string file;
     // firstTxId is supposed to be a constant
-    const long firstTxId;
+    long firstTxId;
     long lastTxId;
     //inProgress is supposed to be a constant
-    const bool inProgress;
+    bool inProgress;
     bool corruptHeader;
 
 };

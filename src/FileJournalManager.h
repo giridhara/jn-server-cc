@@ -36,12 +36,12 @@ public:
     virtual ~FileJournalManager();
 
     vector<EditLogFile> getLogFiles(long fromTxId);
-    int getLogFile(long startTxId, shared_ptr<EditLogFile>&);
-    int getLogFile(string dir, long startTxId, shared_ptr<EditLogFile>&);
+    int getLogFile(long startTxId, EditLogFile&);
+    int getLogFile(string dir, long startTxId, EditLogFile&);
 
-    void matchEditLogs(string logDir, vector<shared_ptr<EditLogFile> >& ret );
+    void matchEditLogs(string logDir, vector<EditLogFile> & ret );
 
-    void matchEditLogs(const vector<string> filesInStorage, vector<shared_ptr<EditLogFile> >& ret);
+    void matchEditLogs(const vector<string>& filesInStorage, vector<EditLogFile>& ret);
 
 private:
 
