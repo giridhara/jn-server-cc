@@ -47,10 +47,11 @@ public:
       lastTxId = other.lastTxId;
       corruptHeader = other.corruptHeader;
     }
+
     EditLogFile():
         file(""),
-        firstTxId(-1),
-        lastTxId(-1),
+        firstTxId(INVALID_TXID),
+        lastTxId(INVALID_TXID),
         inProgress(false),
         corruptHeader(false)
     {}

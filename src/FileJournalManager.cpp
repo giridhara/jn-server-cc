@@ -18,7 +18,6 @@ namespace JournalServiceServer
 
 FileJournalManager::~FileJournalManager()
 {
-    // TODO Auto-generated destructor stub
 }
 
 void
@@ -26,14 +25,6 @@ FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
     matchEditLogs(currentDir, allLogFiles);
-//    vector<EditLogFile> logFiles;
-
-//    for (EditLogFile elf : allLogFiles) {
-//      if (fromTxId <= elf.getFirstTxId() ||
-//          elf.containsTxId(fromTxId)) {
-//        logFiles.push_back(elf);
-//      }
-//    }
 
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
         if (fromTxId <= (*it).getFirstTxId() ||
@@ -65,7 +56,6 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
     
     if (retEditLogFile.empty()) {
         // no matches
-        //TODO : Assuming that compiler will initialize result to zero by default
         return 0;
     } else if (retEditLogFile.size() == 1) {
         result = retEditLogFile.front();  //  copy constructor is getting called here
