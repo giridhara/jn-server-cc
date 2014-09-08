@@ -24,15 +24,50 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
+#include <iomanip>
+#include "Constants.h"
 
 using namespace std;
+using std::string;
 
-namespace hadoop
-{
-namespace JournalServiceClient
+
+namespace JournalServiceServer
 {
   const bool IS_LITTLE_ENDIAN = (1 == *(unsigned char *)&(const int){1});
+
+string getNameNodeFileName(const string filenamePrefix, long txid) {
+     ostringstream strm;
+     strm << filenamePrefix;
+     strm  << setfill('0') << setw(19) << txid;
+    return strm.str();
 }
+
+string getInProgressEditsFileName(long startTxId) {
+    return getNameNodeFileName(EDITS_INPROGRESS, startTxId);
 }
+
+string getInProgressEditsFile(string currentDir, long startTxId) {
+    return string(currentDir + "/" + getInProgressEditsFileName(startTxId));
+}
+
+string getFinalizedEditsFileName(long startTxId, long endTxId) {
+    ostringstream strm;
+    strm << EDITS << "_";
+    strm << setfill('0') << setw(19) << startTxId;
+    strm << "-";
+    strm << setfill('0') << setw(19) << endTxId;
+    return strm.str();
+  }
+
+string getFinalizedEditsFile(string currentDir,
+    long startTxId, long endTxId) {
+    return string(currentDir + "/" +
+        getFinalizedEditsFileName(startTxId, endTxId));
+}
+
+}
+
 #endif //UTIL_JNSERVICE_MISC_UTILS
+
 
