@@ -15,6 +15,9 @@
 #include "../util/StorageInfo.h"
 #include "../util/NamespaceInfo.h"
 #include "../util/Constants.h"
+//#include "../common/Properties.h"
+
+//using namespace KFS;
 
 namespace JournalServiceServer
 {
@@ -27,7 +30,7 @@ class JNStorage : public StorageInfo
 {
 
 public:
-    JNStorage(string logDir) :
+    JNStorage(string conf, string logDir) :
         logDir(logDir),
         currentDir(logDir + "/" + "current")
     {
@@ -38,19 +41,19 @@ public:
     }
     virtual ~JNStorage() {}
 
-    string getInProgressEditLog(long startTxId) {
+    const string getInProgressEditLog(long startTxId) const{
         ostringstream ostr;
         ostr << logDir << "/" << "edits_inprogress_" << startTxId;
         return ostr.str();
     }
 
-    string getPaxosFile(long segmentTxId) {
+    const string getPaxosFile(long segmentTxId) const {
         ostringstream ostr;
         ostr << getPaxosDir() << "/" << segmentTxId;
         return ostr.str();
     }
 
-    string getPaxosDir() {
+    const string getPaxosDir() const {
         ostringstream ostr;
         ostr << logDir << "/"  << "paxos";
         return ostr.str();
@@ -58,8 +61,8 @@ public:
 
     int format(const NamespaceInfo& nsInfo);
 
-    string getCurrentDir() {
-          return currentDir;
+    const string getCurrentDir() const{
+        return currentDir;
     }
 
     int createPaxosDir() {
@@ -102,8 +105,8 @@ private:
         return 0;
     }
 
-    const string logDir;
-    const string currentDir;
+    string logDir;
+    string currentDir;
     StorageState state;
 };
 

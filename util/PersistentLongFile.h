@@ -17,13 +17,20 @@ using namespace std;
 
 class PersistentLongFile {
     private:
-    const string file;
-    const long defaultVal;
+    string file;
+    long defaultVal;
 
     long value;
     bool loaded;
 
     public :
+    PersistentLongFile() :
+        file(),
+        defaultVal(-1),
+        value(-1),
+        loaded(false)
+    {}
+
     PersistentLongFile(string file, long defaultVal)
         :
         file(file),

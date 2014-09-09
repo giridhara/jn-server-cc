@@ -10,30 +10,60 @@
 
 #include <string>
 #include "FileJournalManager.h"
+#include "JNStorage.h"
+//#include "../common/Properties.h"
+#include "../util/Constants.h"
+#include "../util/PersistentLongFile.h"
 
 using std::string;
 
+//using namespace KFS;
+
 namespace JournalServiceServer
 {
+
+const string LAST_PROMISED_FILENAME = "last-promised-epoch";
+const string LAST_WRITER_EPOCH = "last-writer-epoch";
+const string COMMITTED_TXID_FILENAME = "committed-txid";
 
 class Journal
 {
 public:
     Journal();
     virtual ~Journal();
-    const string LAST_PROMISED_FILENAME = "last-promised-epoch";
-    const string LAST_WRITER_EPOCH = "last-writer-epoch";
+
 
 private:
-    const string COMMITTED_TXID_FILENAME = "committed-txid";
     JNClientOutputStream curSegment;
-    long curSegmentTxId = INVALID_TXID;
-    long nextTxId = INVALID_TXID;
-    long highestWrittenTxId = 0;
+    long curSegmentTxId;
+    long nextTxId;
+    long highestWrittenTxId;
 
     const string journalId;
 
-    const JNStorage storage;
+    JNStorage storage;
+
+    Journal(string conf, string logDir, string jid)
+        : curSegment(0),
+          journalId(jid),
+          storage(conf, logDir),
+          curSegmentTxId(INVALID_TXID),
+          nextTxId(INVALID_TXID),
+          highestWrittenTxId(0),
+          currentEpochIpcSerial(-1),
+          lastPromisedEpoch(),
+          lastWriterEpoch(),
+          committedTxnId(INVALID_TXID),
+          fjm(storage)
+    {
+            refreshCachedData();
+
+    //        EditLogFile latest = scanStorageForLatestEdits();
+    //        if (latest != null) {
+    //          highestWrittenTxId = latest.getLastTxId();
+    //        }
+
+    }
 
     /**
      * When a new writer comes along, it asks each node to promise
@@ -52,7 +82,7 @@ private:
      * layer that would re-order IPCs or cause a stale retry from an old
      * request to resurface and confuse things.
      */
-    long currentEpochIpcSerial = -1;
+    long currentEpochIpcSerial;
 
     /**
      * The epoch number of the last writer to actually write a transaction.
@@ -71,6 +101,10 @@ private:
     long committedTxnId;
 
     FileJournalManager fjm;
+
+    void refreshCachedData();
+
+
 };
 
 } /* namespace JournalServiceServer */
