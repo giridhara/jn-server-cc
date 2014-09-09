@@ -21,6 +21,47 @@ FileJournalManager::~FileJournalManager()
 {
 }
 
+/**
+ * Find all editlog segments starting at or above the given txid.
+ * @param fromTxId the txnid which to start looking
+ * @param inProgressOk whether or not to include the in-progress edit log
+ *        segment
+ * @return a list of remote edit logs
+ * @throws IOException if edit logs cannot be listed.
+ */
+void
+FileJournalManager::getRemoteEditLogs(long firstTxId, bool inProgressOk, vector<EditLogFile>& ret) {
+    string currentDir = jnStorage.getCurrentDir();
+    vector<EditLogFile> allLogFiles;
+    matchEditLogs(currentDir, allLogFiles);
+
+    for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
+        if((*it).hasCorruptHeader() || (!inProgressOk && (*it).isInProgress())) {
+            continue;
+        }
+        //TODO : using EditLogFile itself in place of RemoteEditLog , as RemoteEditLog looks redundant for me
+        // might have to revisit this decision
+        EditLogFile elf("", (*it).getFirstTxId(), (*it).getLastTxId(), false);
+        if((*it).getFirstTxId() >= firstTxId) {
+            ret.push_back(elf);
+        } else if((*it).getFirstTxId() < firstTxId && firstTxId <= (*it).getLastTxId()) {
+            // If the firstTxId is in the middle of an edit log segment. Return this
+            // anyway and let the caller figure out whether it wants to use it.
+            ret.push_back(elf);
+        }
+    }
+
+    sort(ret.begin(), ret.end());
+}
+
+int
+FileJournalManager::startLogSegment(long txid, int layoutVersion, JNClientOutputStream& ret) {
+    currentInProgress = getInProgressEditsFile(jnStorage.getCurrentDir(), txid);
+    JNClientOutputStream stm(currentInProgress);
+    ret=stm;
+
+    return 0;
+}
 
 int
 FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
@@ -76,6 +117,7 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
     vector<EditLogFile > retEditLogFile;
     for (vector<EditLogFile>::iterator it = matchedEditLogs.begin(); it != matchedEditLogs.end(); ++it) {
         if ((*it).getFirstTxId() == startTxId) {
+            cout << "pushing elf element from vector into local vector" << endl;
             retEditLogFile.push_back(*it);
         }
     }
@@ -84,7 +126,7 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
         // no matches
         return 0;
     } else if (retEditLogFile.size() == 1) {
-        result = retEditLogFile.front();  //  copy constructor is getting called here
+        result = retEditLogFile.front();  //  assignment operator of EditLogFile function is called
         //retEditLogFile.front();
         return 0;
     }

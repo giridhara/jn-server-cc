@@ -18,68 +18,9 @@
 
 #include "JNClientOutputStream.h"
 
-using namespace std;
-
-namespace hadoop
-{
 namespace JournalServiceServer
 {
-  JNClientOutputStream::JNClientOutputStream(
-      const seq_t txId,
-	  const string data)
-	  : mSize(0),
-	    mOpcode(OPCODE),
-		mDataSize(data.size())
-  {
-    int length = calculateSize();
-    mBuffer = new char[length];
-    writeByte(mOpcode);
-    // write the length : content of the op  - op_code - checksum
-    writeInt(length - 5);
-    writeLong(txId);
-    writeString(data);
-    writeChecksum();
-  }
-
   JNClientOutputStream::~JNClientOutputStream()
   {
-    delete[] mBuffer;
   }
-
-  template <typename T>
-    void
-    JNClientOutputStream::store_as_big_endian(T u)
-    {
-      union
-      {
-        T u;
-        unsigned char u8[sizeof(T)];
-      } source;
-
-      source.u = u;
-      for (size_t k = 0; k < sizeof(T); k++)
-      {
-          if (IS_LITTLE_ENDIAN)
-            mBuffer[mSize++] = source.u8[sizeof(T) - k - 1];
-          else
-            mBuffer[mSize++] = source.u8[k];
-      }
-    }
-
-  void
-    JNClientOutputStream::writeChecksum()
-    {
-      boost::crc_32_type result;
-      result.process_bytes(mBuffer, mSize);
-      int checksum = result.checksum();
-      writeInt(checksum);
-    }
-
-  const char*
-    JNClientOutputStream::get(size_t& length)
-  {
-    length = mSize;
-    return mBuffer;
-  }
-}
 }

@@ -31,44 +31,23 @@
 #ifndef JNCLIENT_OUTPUT_STREAM_H
 #define JNCLIENT_OUTPUT_STREAM_H
 
-#include "../util/JNServiceMiscUtils.h"
+#include <string>
 
-#include <boost/crc.hpp>
-#include <string.h>
-#include <stdint.h>
-
-using namespace std;
+using std::string;
 
 namespace JournalServiceServer
 {
   class JNClientOutputStream
   {
     public:
-      JNClientOutputStream(const int64_t txId, const string data);
+      JNClientOutputStream(const string filename)
+        :
+          filename(filename)
+      {}
       ~JNClientOutputStream();
 
-      const char* get(size_t& length);
     private:
-      const int calculateSize() const {return 17 + mDataSize; /*1 + 4 + 8 + data.size() + 4*/}
-
-      template <typename T>
-        void store_as_big_endian(T u);
-
-      void writeByte(char opcode) {mBuffer[mSize++] = opcode;}
-
-      void writeInt(int i) { store_as_big_endian<int>(i);}
-
-      void writeLong(long l) { store_as_big_endian<long>(l);}
-
-      void writeString(string data) { memcpy(mBuffer + mSize, data.c_str(), mDataSize); mSize += mDataSize; }
-
-      void writeChecksum();
-
-      char*   mBuffer;
-      size_t  mSize;
-      char    mOpcode;
-      size_t  mDataSize;
+      string filename;
   };
-
 }
 #endif //JNCLIENT_OUTPUT_STREAM_H

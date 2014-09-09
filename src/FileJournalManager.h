@@ -14,6 +14,7 @@
 #include <string>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
+#include "JNClientOutputStream.h"
 
 using std::vector;
 using std::string;
@@ -38,6 +39,7 @@ public:
 
     vector<EditLogFile> getLogFiles(long fromTxId);
     void getLogFiles(long fromTxId, vector<EditLogFile>& ret);
+    void getRemoteEditLogs(long firstTxId, bool inProgressOk, vector<EditLogFile>& ret);
     int getLogFile(long startTxId, EditLogFile&);
     int getLogFile(string dir, long startTxId, EditLogFile&);
 
@@ -46,6 +48,7 @@ public:
     void matchEditLogs(const vector<string>& filesInStorage, vector<EditLogFile>& ret);
 
     int finalizeLogSegment(long firstTxId, long lastTxId);
+    int startLogSegment(long txid, int layoutVersion, JNClientOutputStream&);
 
 private:
 
