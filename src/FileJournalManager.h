@@ -37,7 +37,6 @@ public:
     {}
     virtual ~FileJournalManager();
 
-    vector<EditLogFile> getLogFiles(long fromTxId);
     void getLogFiles(long fromTxId, vector<EditLogFile>& ret);
     void getRemoteEditLogs(long firstTxId, bool inProgressOk, vector<EditLogFile>& ret);
     int getLogFile(long startTxId, EditLogFile&);

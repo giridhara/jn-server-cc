@@ -10,6 +10,7 @@
 
 #include <string>
 #include<assert.h>
+#include "JNClientInputStream.h"
 
 using std::string;
 
@@ -95,28 +96,43 @@ public:
 //          this.lastTxId = val.getEndTxId();
 //          this.hasCorruptHeader = val.hasCorruptHeader();
 //        }
-//
-//        void scanLog() {
-//          EditLogValidation val = EditLogFileInputStream.scanEditLog(file);
-//          this.lastTxId = val.getEndTxId();
-//          this.hasCorruptHeader = val.hasCorruptHeader();
-//        }
 
-        const bool isInProgress() {
-          return inProgress;
-        }
+    const bool isInProgress() {
+      return inProgress;
+    }
 
-        string getFile() {
-          return file;
-        }
+    string getFile() {
+      return file;
+    }
 
-        bool hasCorruptHeader() {
-          return corruptHeader;
-        }
+    bool hasCorruptHeader() {
+      return corruptHeader;
+    }
 
-        const bool operator<(const EditLogFile &other) const;
-        const bool operator>(const EditLogFile &other) const;
-        const bool operator==(const EditLogFile &other) const;
+    const bool operator<(const EditLogFile &other) const;
+    const bool operator>(const EditLogFile &other) const;
+    const bool operator==(const EditLogFile &other) const;
+
+    int scanLog() {
+      return JNClientInputStream::scanLog(file, lastTxId, corruptHeader);
+    }
+
+    int moveAsideCorruptFile() {
+        //assert hasCorruptHeader;
+       return renameSelf(".corrupt");
+    }
+
+   int  moveAsideTrashFile(long markerTxid){
+    // assert this.getFirstTxId() >= markerTxid;
+       return renameSelf(".trash");
+   }
+
+   int moveAsideEmptyFile() {
+    // assert lastTxId == HdfsConstants.INVALID_TXID;
+       return renameSelf(".empty");
+   }
+
+   int renameSelf(string newSuffix);
 
 private :
     string file;

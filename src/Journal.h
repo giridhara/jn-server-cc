@@ -104,6 +104,8 @@ private:
 
     void refreshCachedData();
 
+    int scanStorageForLatestEdits(EditLogFile& ret);
+
 
 };
 

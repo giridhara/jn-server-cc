@@ -31,57 +31,20 @@
 #ifndef ICE_UTIL_JN_CLIENT_INPUT_STREAM_H
 #define ICE_UTIL_JN_CLIENT_INPUT_STREAM_H
 
-#include "JournalServiceInterfaceUtils.h"
-#include "JNClientErrorCodes.h"
 
 #include <string>
 using namespace std;
 
-namespace hadoop
-{
-namespace JournalServiceClient
+namespace JournalServiceServer
 {
   class JNClientInputStream
   {
-    TxLogs mLogs;
-    seq_t mFirstTxId;
-    seq_t mLastTxId;
-    size_t mCurPosition;
-    seq_t mNextTxId;
-    bool mInProgress;
-    string mStrm;
 
     public:
-    JNClientInputStream(const string ostrm, const seq_t firstTxId, const seq_t lastTxId, const bool isInProgress);
 
-    const seq_t getFirstTxId() const { return mFirstTxId;}
-    const seq_t getLastTxId() const { return mLastTxId; }
-
-    JNClientStatus readLogs(TxLogs& logs);
-
-    const bool operator>(const JNClientInputStream &other) const;
-
-    const bool operator<(const JNClientInputStream &other) const;
-
-    const bool operator==(const JNClientInputStream &other) const;
-
-    private:
-    JNClientStatus readOp();
-
-    JNClientStatus skipHeader();
-
-    JNClientStatus readOpcode(unsigned char& opcode);
-
-    template <typename T>
-      T read_as_type();
-
-    JNClientStatus readInt(int& i);
-
-    JNClientStatus readLong(long& l);
-
-    JNClientStatus readString(size_t length, string& data);
+    static int scanLog(string file, long& lastTxId, bool& corruptHeader);
 
   };
 }
-}
+
 #endif //ICE_UTIL_JN_CLIENT_INPUT_STREAM_H
