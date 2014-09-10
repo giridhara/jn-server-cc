@@ -35,10 +35,17 @@ Journal::refreshCachedData() {
     committedTxnId = INVALID_TXID;
   }
 
+/**
+* Scan the local storage directory, and return the segment containing
+* the highest transaction.
+* @return the EditLogFile with the highest transactions, or null
+* if no files exist.
+*/
+//call isInitialized function on 'ret' before using it
 int
 Journal::scanStorageForLatestEdits(EditLogFile& ret) {
     if (!file_exists(storage.getCurrentDir())) {
-      return -1;
+      return 0;
     }
 
     LOG.info("Scanning storage ");
@@ -77,5 +84,50 @@ Journal::format(NamespaceInfo& nsInfo) {
     refreshCachedData();
     return 0;
 }
+
+int
+Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret) {
+    if(checkFormatted() != 0) {
+        return -1;
+    }
+
+    if(storage.checkConsistentNamespace(nsInfo) != 0 ){
+        return -1;
+    }
+
+    long lpe;
+
+    if(getLastPromisedEpoch(lpe) != 0) {
+        return -1;
+    }
+
+    // Check that the new epoch being proposed is in fact newer than
+    // any other that we've promised.
+    if (epoch <= lpe) {
+        LOG.error("Proposed epoch %d <= last promise %d", epoch, lpe);
+        return -1;
+    }
+
+    if(updateLastPromisedEpoch(lpe, epoch) != 0 ) {
+        return -1;
+    }
+
+    if (abortCurSegment() != 0 ) {
+        return -1;
+    }
+
+    EditLogFile latestFile;
+    if(scanStorageForLatestEdits(latestFile) != 0 ) {
+        return -1;
+    }
+
+    if(latestFile.isInitialized()) {
+        ret.set_lastsegmenttxid(latestFile.getFirstTxId());
+    }
+
+    return 0;
+}
+
+
 
 } /* namespace JournalServiceServer */

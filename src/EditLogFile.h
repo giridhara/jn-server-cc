@@ -72,6 +72,10 @@ public:
         corruptHeader(false)
     {}
 
+    bool isInitialized() {
+        return !file.empty();
+    }
+
     virtual ~EditLogFile() {}
 
     const long getFirstTxId() {

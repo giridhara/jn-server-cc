@@ -17,6 +17,7 @@
 #include "../util/NamespaceInfo.h"
 #include <boost/scoped_ptr.hpp>
 #include "../util/Logger.h"
+#include "../ice-qjournal-protocol/QJournalProtocolPB.h"
 
 using std::string;
 
@@ -33,30 +34,6 @@ class Journal
 {
 public:
     Journal();
-    virtual ~Journal();
-    int abortCurSegment() {
-        if (!curSegment) {
-          return 0;
-        }
-
-        if(curSegment->abort() != 0)
-            return -1;
-        curSegment.reset(0);
-        curSegmentTxId = INVALID_TXID;
-
-        return 0;
-    }
-
-private:
-    boost::scoped_ptr<JNClientOutputStream> curSegment;
-    long curSegmentTxId;
-    long nextTxId;
-    long highestWrittenTxId;
-
-    const string journalId;
-
-    JNStorage storage;
-
     Journal(string conf, string logDir, string jid)
         :
           journalId(jid),
@@ -80,6 +57,83 @@ private:
     //        }
 
     }
+    virtual ~Journal();
+    int abortCurSegment() {
+        if (!curSegment) {
+          return 0;
+        }
+
+        if(curSegment->abort() != 0)
+            return -1;
+        curSegment.reset(0);
+        curSegmentTxId = INVALID_TXID;
+
+        return 0;
+    }
+    int getLastPromisedEpoch(long& ret){
+        checkFormatted();
+        // get function below modifies argument only on successful execution
+        return lastPromisedEpoch.get(ret);
+      }
+
+    int getLastWriterEpoch(long& ret) {
+        checkFormatted();
+        return lastWriterEpoch.get(ret);
+    }
+
+//      synchronized long getCurrentLagTxns() throws IOException {
+//        long committed = committedTxnId.get();
+//        if (committed == 0) {
+//          return 0;
+//        }
+//
+//        return Math.max(committed - highestWrittenTxId, 0L);
+//      }
+
+    long getHighestWrittenTxId() {
+        return highestWrittenTxId;
+    }
+    int newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret);
+
+private:
+    void refreshCachedData();
+
+    int checkFormatted() {
+       if (!isFormatted()) {
+           LOG.error("Journal %s  is not formatted", storage.getLogDir().c_str());
+           return -1;
+       }
+       return 0;
+     }
+
+    bool isFormatted() {
+        return storage.isFormatted();
+    }
+
+    int scanStorageForLatestEdits(EditLogFile& ret);
+    int format(NamespaceInfo& nsInfo);
+
+    int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
+       LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);
+       if(lastPromisedEpoch.set(newEpoch) != 0 ){
+           return -1;
+       }
+
+       // Since we have a new writer, reset the IPC serial - it will start
+       // counting again from 0 for this writer.
+       currentEpochIpcSerial = -1;
+       return 0;
+     }
+
+
+    boost::scoped_ptr<JNClientOutputStream> curSegment;
+    long curSegmentTxId;
+    long nextTxId;
+    long highestWrittenTxId;
+
+    const string journalId;
+
+    JNStorage storage;
 
     /**
      * When a new writer comes along, it asks each node to promise
@@ -117,47 +171,6 @@ private:
     long committedTxnId;
 
     FileJournalManager fjm;
-
-    void refreshCachedData();
-
-    int checkFormatted() {
-       if (!isFormatted()) {
-           LOG.error("Journal %s  is not formatted", storage.getLogDir().c_str());
-           return -1;
-       }
-       return 0;
-     }
-
-    bool isFormatted() {
-        return storage.isFormatted();
-    }
-
-    int scanStorageForLatestEdits(EditLogFile& ret);
-    int format(NamespaceInfo& nsInfo);
-
-    int getLastPromisedEpoch(long& ret){
-        checkFormatted();
-        // get function below modifies argument only on successful execution
-        return lastPromisedEpoch.get(ret);
-      }
-
-    int getLastWriterEpoch(long& ret) {
-        checkFormatted();
-        return lastWriterEpoch.get(ret);
-    }
-
-//      synchronized long getCurrentLagTxns() throws IOException {
-//        long committed = committedTxnId.get();
-//        if (committed == 0) {
-//          return 0;
-//        }
-//
-//        return Math.max(committed - highestWrittenTxId, 0L);
-//      }
-
-      long getHighestWrittenTxId() {
-        return highestWrittenTxId;
-      }
 };
 
 } /* namespace JournalServiceServer */
