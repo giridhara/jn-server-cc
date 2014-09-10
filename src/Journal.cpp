@@ -266,4 +266,35 @@ Journal::finalizeLogSegment(RequestInfo& reqInfo, long startTxId,
     return 0;
 }
 
+int
+Journal::getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized) {
+    EditLogFile elf;
+    if( fjm.getLogFile(segmentTxId, elf) != 0 ) {
+        return -1;
+    }
+    if (!elf.isInitialized()) {
+      isInitialized = false;
+      return 0;
+    }
+    if (elf.isInProgress()) {
+      if(elf.scanLog() != 0) {
+          return -1;
+      }
+    }
+    if (elf.getLastTxId() == INVALID_TXID) {
+      LOG.info("Edit log file %s appears to be empty. Moving it aside...", elf.getFile().c_str());
+      elf.moveAsideEmptyFile();
+      isInitialized = false;
+      return 0;
+    }
+    ssp.set_starttxid(segmentTxId);
+    ssp.set_endtxid(elf.getLastTxId());
+    ssp.set_isinprogress(elf.isInProgress());
+
+    //TODO : Looks like i need to provide implementation for << for EditLogFile, so that logging as done below is possible
+//    LOG.info("getSegmentInfo(" + segmentTxId + "): " + elf + " -> " +
+//        TextFormat.shortDebugString(ret));
+    return 0;
+}
+
 } /* namespace JournalServiceServer */

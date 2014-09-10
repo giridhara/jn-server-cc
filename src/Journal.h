@@ -110,6 +110,8 @@ private:
     int checkRequest(RequestInfo& reqInfo);
     int checkWriteRequest(RequestInfo& reqInfo);
 
+    int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
+
     int purgePaxosDecision(long segmentTxId);
 
     int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
