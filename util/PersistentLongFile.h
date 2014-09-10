@@ -36,7 +36,7 @@ class PersistentLongFile {
         file(file),
         defaultVal(defaultVal),
         loaded(false)
-        {}
+    {}
 
     int get(long& result) {
         if (!loaded) {

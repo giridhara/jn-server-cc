@@ -128,6 +128,37 @@ Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochRespo
     return 0;
 }
 
+int
+Journal::checkRequest(RequestInfo& reqInfo) {
+    // Invariant 25 from ZAB paper
+    if (reqInfo.getEpoch() < lastPromisedEpoch.get()) {
+      throw new IOException("IPC's epoch " + reqInfo.getEpoch() +
+          " is less than the last promised epoch " +
+          lastPromisedEpoch.get());
+    } else if (reqInfo.getEpoch() > lastPromisedEpoch.get()) {
+      // A newer client has arrived. Fence any previous writers by updating
+      // the promise.
+      updateLastPromisedEpoch(reqInfo.getEpoch());
+    }
+
+    // Ensure that the IPCs are arriving in-order as expected.
+    checkSync(reqInfo.getIpcSerialNumber() > currentEpochIpcSerial,
+        "IPC serial %s from client %s was not higher than prior highest " +
+        "IPC serial %s", reqInfo.getIpcSerialNumber(),
+        Server.getRemoteIp(),
+        currentEpochIpcSerial);
+    currentEpochIpcSerial = reqInfo.getIpcSerialNumber();
+
+    if (reqInfo.hasCommittedTxId()) {
+      Preconditions.checkArgument(
+          reqInfo.getCommittedTxId() >= committedTxnId.get(),
+          "Client trying to move committed txid backward from " +
+          committedTxnId.get() + " to " + reqInfo.getCommittedTxId());
+
+      committedTxnId.set(reqInfo.getCommittedTxId());
+    }
+}
+
 
 
 } /* namespace JournalServiceServer */

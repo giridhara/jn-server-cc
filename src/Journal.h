@@ -58,18 +58,7 @@ public:
 
     }
     virtual ~Journal();
-    int abortCurSegment() {
-        if (!curSegment) {
-          return 0;
-        }
 
-        if(curSegment->abort() != 0)
-            return -1;
-        curSegment.reset(0);
-        curSegmentTxId = INVALID_TXID;
-
-        return 0;
-    }
     int getLastPromisedEpoch(long& ret){
         checkFormatted();
         // get function below modifies argument only on successful execution
@@ -112,6 +101,7 @@ private:
 
     int scanStorageForLatestEdits(EditLogFile& ret);
     int format(NamespaceInfo& nsInfo);
+    int checkRequest(RequestInfo& reqInfo);
 
     int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
        LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);
@@ -124,6 +114,19 @@ private:
        currentEpochIpcSerial = -1;
        return 0;
      }
+
+    int abortCurSegment() {
+        if (!curSegment) {
+          return 0;
+        }
+
+        if(curSegment->abort() != 0)
+            return -1;
+        curSegment.reset(0);
+        curSegmentTxId = INVALID_TXID;
+
+        return 0;
+    }
 
 
     boost::scoped_ptr<JNClientOutputStream> curSegment;
