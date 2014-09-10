@@ -65,6 +65,10 @@ public:
         return currentDir;
     }
 
+    const string getLogDir() const{
+        return logDir;
+    }
+
     int createPaxosDir() {
         boost::system::error_code error;
         boost::filesystem::path dir(getPaxosDir());

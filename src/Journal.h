@@ -14,6 +14,9 @@
 //#include "../common/Properties.h"
 #include "../util/Constants.h"
 #include "../util/PersistentLongFile.h"
+#include "../util/NamespaceInfo.h"
+#include <boost/scoped_ptr.hpp>
+#include "../util/Logger.h"
 
 using std::string;
 
@@ -31,10 +34,21 @@ class Journal
 public:
     Journal();
     virtual ~Journal();
+    int abortCurSegment() {
+        if (!curSegment) {
+          return 0;
+        }
 
+        if(curSegment->abort() != 0)
+            return -1;
+        curSegment.reset(0);
+        curSegmentTxId = INVALID_TXID;
+
+        return 0;
+    }
 
 private:
-    JNClientOutputStream curSegment;
+    boost::scoped_ptr<JNClientOutputStream> curSegment;
     long curSegmentTxId;
     long nextTxId;
     long highestWrittenTxId;
@@ -44,7 +58,7 @@ private:
     JNStorage storage;
 
     Journal(string conf, string logDir, string jid)
-        : curSegment(0),
+        :
           journalId(jid),
           storage(conf, logDir),
           curSegmentTxId(INVALID_TXID),
@@ -56,6 +70,8 @@ private:
           committedTxnId(INVALID_TXID),
           fjm(storage)
     {
+        curSegment.reset(0);
+ //       TODO :: have to read about how to handle failures in constructors in c++
             refreshCachedData();
 
     //        EditLogFile latest = scanStorageForLatestEdits();
@@ -104,9 +120,44 @@ private:
 
     void refreshCachedData();
 
+    int checkFormatted() {
+       if (!isFormatted()) {
+           LOG.error("Journal %s  is not formatted", storage.getLogDir().c_str());
+           return -1;
+       }
+       return 0;
+     }
+
+    bool isFormatted() {
+        return storage.isFormatted();
+    }
+
     int scanStorageForLatestEdits(EditLogFile& ret);
+    int format(NamespaceInfo& nsInfo);
 
+    int getLastPromisedEpoch(long& ret){
+        checkFormatted();
+        // get function below modifies argument only on successful execution
+        return lastPromisedEpoch.get(ret);
+      }
 
+    int getLastWriterEpoch(long& ret) {
+        checkFormatted();
+        return lastWriterEpoch.get(ret);
+    }
+
+//      synchronized long getCurrentLagTxns() throws IOException {
+//        long committed = committedTxnId.get();
+//        if (committed == 0) {
+//          return 0;
+//        }
+//
+//        return Math.max(committed - highestWrittenTxId, 0L);
+//      }
+
+      long getHighestWrittenTxId() {
+        return highestWrittenTxId;
+      }
 };
 
 } /* namespace JournalServiceServer */

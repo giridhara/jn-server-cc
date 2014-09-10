@@ -6,7 +6,6 @@
  */
 
 #include "Journal.h"
-#include "../util/Logger.h"
 #include "../util/JNServiceMiscUtils.h"
 
 namespace JournalServiceServer
@@ -62,6 +61,20 @@ Journal::scanStorageForLatestEdits(EditLogFile& ret) {
     }
 
     LOG.info("No files in %s", storage.getCurrentDir().c_str());
+    return 0;
+}
+
+int
+Journal::format(NamespaceInfo& nsInfo) {
+    if(nsInfo.getNamespaceID() == 0) {
+        LOG.error("can't format with uninitialized namespace info");
+        return -1;
+    }
+    LOG.info("Formatting journal with namespace info");
+    int rc = storage.format(nsInfo);
+    if(rc != 0)
+        return -1;
+    refreshCachedData();
     return 0;
 }
 
