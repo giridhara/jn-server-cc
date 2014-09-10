@@ -88,6 +88,7 @@ public:
         return highestWrittenTxId;
     }
     int newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret);
+    int finalizeLogSegment(RequestInfo& reqInfo, long startTxId, long endTxId);
 
 private:
     void refreshCachedData();
@@ -107,6 +108,9 @@ private:
     int scanStorageForLatestEdits(EditLogFile& ret);
     int format(NamespaceInfo& nsInfo);
     int checkRequest(RequestInfo& reqInfo);
+    int checkWriteRequest(RequestInfo& reqInfo);
+
+    int purgePaxosDecision(long segmentTxId);
 
     int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
        LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);

@@ -56,6 +56,8 @@ namespace JournalServiceServer
           return filename;
       }
 
+      int close();
+
     private:
       string filename;
   };

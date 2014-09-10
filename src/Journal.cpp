@@ -123,6 +123,11 @@ Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochRespo
     return 0;
 }
 
+/**
+   * Ensure that the given request is coming from the correct writer and in-order.
+   * @param reqInfo the request info
+   * @throws IOException if the request is invalid.
+*/
 int
 Journal::checkRequest(RequestInfo& reqInfo) {
     // Invariant 25 from ZAB paper
@@ -163,6 +168,101 @@ Journal::checkRequest(RequestInfo& reqInfo) {
       return committedTxnId->set(reqInfo.getCommittedTxId());
     }
 
+    return 0;
+}
+
+int
+Journal::checkWriteRequest(RequestInfo& reqInfo) {
+    if(checkRequest(reqInfo)!=0) {
+        return -1;
+    }
+
+    long lwe;
+    if(lastWriterEpoch->get(lwe) !=0 ){
+        return -1;
+    }
+
+    if (reqInfo.getEpoch() != lwe) {
+      LOG.error("IPC's epoch %d is not the current writer epoch %d",
+              reqInfo.getEpoch(), lwe);
+      return -1;
+    }
+    return 0;
+}
+
+/**
+   * Finalize the log segment at the given transaction ID.
+   */
+int
+Journal::finalizeLogSegment(RequestInfo& reqInfo, long startTxId,
+      long endTxId) {
+    if(checkFormatted() != 0 ) {
+        return -1;
+    }
+
+    if(checkRequest(reqInfo) != 0){
+        return -1;
+    }
+
+    bool needsValidation = true;
+
+    // Finalizing the log that the writer was just writing.
+    if (startTxId == curSegmentTxId) {
+      if (curSegment) {
+        curSegment->close();
+        curSegment.reset();
+        curSegmentTxId = INVALID_TXID;
+      }
+
+    if (nextTxId != endTxId + 1) {
+        LOG.error("Trying to finalize in-progress log segment %s "
+                  "to end at txid %s but only written up to txid %s",
+          startTxId, endTxId, nextTxId - 1);
+        return -1;
+    }
+      // No need to validate the edit log if the client is finalizing
+      // the log segment that it was just writing to.
+      needsValidation = false;
+    }
+
+    EditLogFile elf;
+    if (fjm.getLogFile(startTxId, elf) != 0) {
+        return -1;
+    }
+    if (!elf.isInitialized()) {
+      LOG.error("No log file to finalize at transaction ID %d", startTxId);
+      return -1;
+    }
+
+    if (elf.isInProgress()) {
+        if (needsValidation) {
+            LOG.info("Validating log segment %s about to be finalized",  elf.getFile().c_str());
+            if(elf.scanLog() != 0) {
+                return -1;
+            }
+            if(elf.getLastTxId() != endTxId) {
+                LOG.error("Trying to finalize in-progress log segment %s to end at txid %s but log %s on disk only contains up to txid %s",
+                        startTxId, endTxId, elf.getFile().c_str(), elf.getLastTxId());
+                return -1;
+            }
+        }
+        if (fjm.finalizeLogSegment(startTxId, endTxId) != 0 ) {
+          return -1;
+        }
+    }else {
+        if(endTxId != elf.getLastTxId()) {
+            LOG.error("Trying to re-finalize already finalized log [%d, %d] with different endTxId %d",
+                    elf.getFirstTxId(), elf.getLastTxId(), endTxId);
+        }
+    }
+
+    // Once logs are finalized, a different length will never be decided.
+    // During recovery, we treat a finalized segment the same as an accepted
+    // recovery. Thus, we no longer need to keep track of the previously-
+    // accepted decision. The existence of the finalized log segment is enough.
+    if (purgePaxosDecision(elf.getFirstTxId()) != 0 ){
+        return -1;
+    }
     return 0;
 }
 
