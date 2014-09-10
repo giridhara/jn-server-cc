@@ -13,12 +13,12 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <boost/shared_ptr.hpp>
 #include "JNClientOutputStream.h"
+#include "boost/scoped_ptr.hpp"
 
 using std::vector;
 using std::string;
-using boost::shared_ptr;
+using boost::scoped_ptr;
 
 namespace JournalServiceServer
 {
@@ -47,7 +47,7 @@ public:
     void matchEditLogs(const vector<string>& filesInStorage, vector<EditLogFile>& ret);
 
     int finalizeLogSegment(long firstTxId, long lastTxId);
-    int startLogSegment(long txid, int layoutVersion, JNClientOutputStream&);
+    int startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>&);
 
 private:
 

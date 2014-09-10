@@ -13,6 +13,11 @@ namespace JournalServiceServer
 
 Journal::~Journal()
 {
+    //TODO : storage is currently stack variable, hence should not call delete on it
+    // it will get automatically cleared up
+//    delete storage;
+    committedTxnId.reset();
+    curSegment.reset();
 }
 
 /**
@@ -291,10 +296,96 @@ Journal::getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, 
     ssp.set_endtxid(elf.getLastTxId());
     ssp.set_isinprogress(elf.isInProgress());
 
-    //TODO : Looks like i need to provide implementation for << for EditLogFile, so that logging as done below is possible
+    //TODO : Looks like i need to provide implementation for '<<' operator for EditLogFile,
+    //so that logging as done below is possible
 //    LOG.info("getSegmentInfo(" + segmentTxId + "): " + elf + " -> " +
 //        TextFormat.shortDebugString(ret));
     return 0;
+}
+
+/**
+   * Start a new segment at the given txid. The previous segment
+   * must have already been finalized.
+   */
+int
+Journal::startLogSegment(RequestInfo& reqInfo, long txid,
+      int layoutVersion) {
+    //TODO : Have to implement below assert.
+    //assert fjm != null;
+
+    if (checkFormatted() != 0) {
+        return -1;
+    }
+
+    if (checkRequest(reqInfo) != 0) {
+        return -1;
+    }
+
+    if (curSegment) {
+        ostringstream warnMsg;
+        // TODO : Below msg is not entirely proper.
+        warnMsg << "Client is requesting a new log segment " << txid
+                << "though we are already writing " << ". "
+                << "Aborting the current segment in order to begin the new one.";
+        LOG.warn(warnMsg.str().c_str());
+        // The writer may have lost a connection to us and is now
+        // re-connecting after the connection came back.
+        // We should abort our own old segment.
+        if(abortCurSegment() != 0 ){
+            return -1;
+        }
+    }
+
+    // Paranoid sanity check: we should never overwrite a finalized log file.
+    // Additionally, if it's in-progress, it should have at most 1 transaction.
+    // This can happen if the writer crashes exactly at the start of a segment.
+    EditLogFile existing;
+    if (fjm.getLogFile(txid, existing) != 0 ) {
+        return -1;
+    }
+    if (existing.isInitialized()) {
+        if (!existing.isInProgress()) {
+            LOG.warn("Already have a finalized segment %s beginning at ",
+              existing.getFile().c_str(), txid);
+        }
+
+        // If it's in-progress, it should only contain one transaction,
+        // because the "startLogSegment" transaction is written alone at the
+        // start of each segment.
+        if (existing.scanLog() != 0 ){
+            return -1;
+        }
+        if (existing.getLastTxId() != existing.getFirstTxId()) {
+            LOG.error("The log file %s seems to contain valid transactions" , existing.getFile().c_str());
+            return -1;
+        }
+    }
+
+    long curLastWriterEpoch;
+    if (lastWriterEpoch->get(curLastWriterEpoch) != 0 ) {
+        return -1;
+    }
+    if (curLastWriterEpoch != reqInfo.getEpoch()) {
+      LOG.info("Updating lastWriterEpoch from %d to %d", reqInfo.getEpoch(), curLastWriterEpoch);
+      if(lastWriterEpoch->set(reqInfo.getEpoch()) !=0 ) {
+          return -1;
+      }
+    }
+
+    // The fact that we are starting a segment at this txid indicates
+    // that any previous recovery for this same segment was aborted.
+    // Otherwise, no writer would have started writing. So, we can
+    // remove the record of the older segment here.
+    if (purgePaxosDecision(txid) != 0 ) {
+        return -1;
+    }
+
+    if (fjm.startLogSegment(txid, layoutVersion, curSegment) != 0){
+        return -1;
+    }
+
+    curSegmentTxId = txid;
+    nextTxId = txid;
 }
 
 } /* namespace JournalServiceServer */

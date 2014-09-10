@@ -22,5 +22,6 @@ namespace JournalServiceServer
 {
   JNClientOutputStream::~JNClientOutputStream()
   {
+      close();
   }
 }

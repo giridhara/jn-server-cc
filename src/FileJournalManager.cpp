@@ -55,10 +55,9 @@ FileJournalManager::getRemoteEditLogs(long firstTxId, bool inProgressOk, vector<
 }
 
 int
-FileJournalManager::startLogSegment(long txid, int layoutVersion, JNClientOutputStream& ret) {
+FileJournalManager::startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>& ret) {
     currentInProgress = getInProgressEditsFile(jnStorage.getCurrentDir(), txid);
-    JNClientOutputStream stm(currentInProgress);
-    ret=stm;
+    ret.reset(new JNClientOutputStream(currentInProgress));
 
     return 0;
 }

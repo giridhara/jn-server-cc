@@ -87,7 +87,9 @@ public:
     long getHighestWrittenTxId() {
         return highestWrittenTxId;
     }
+
     int newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret);
+    int startLogSegment(RequestInfo& reqInfo, long txid, int layoutVersion);
     int finalizeLogSegment(RequestInfo& reqInfo, long startTxId, long endTxId);
 
 private:
