@@ -24,15 +24,10 @@ void
 Journal::refreshCachedData() {
     //TODO : this function is not complete
     //IOUtils.closeStream(committedTxnId);
-
     const string currentDir(storage.getCurrentDir());
-    PersistentLongFile lpe((currentDir+ "/" +  LAST_PROMISED_FILENAME), 0);
-    lastPromisedEpoch = lpe;
-//    lastPromisedEpoch((currentDir+ "/" +  LAST_PROMISED_FILENAME), 0);
-    PersistentLongFile lwe((currentDir, LAST_WRITER_EPOCH), 0);
-    lastWriterEpoch = lwe;
-//    lastWriterEpoch((currentDir, LAST_WRITER_EPOCH), 0);
-    committedTxnId = INVALID_TXID;
+    lastPromisedEpoch.reset(new PersistentLongFile(currentDir+ "/" +  LAST_PROMISED_FILENAME, 0));
+    lastWriterEpoch.reset(new PersistentLongFile(currentDir + "/" + LAST_WRITER_EPOCH, 0));
+    committedTxnId.reset(new BestEffortLongFile(currentDir + "/" + COMMITTED_TXID_FILENAME, INVALID_TXID));
   }
 
 /**
@@ -131,34 +126,44 @@ Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochRespo
 int
 Journal::checkRequest(RequestInfo& reqInfo) {
     // Invariant 25 from ZAB paper
-    if (reqInfo.getEpoch() < lastPromisedEpoch.get()) {
-      throw new IOException("IPC's epoch " + reqInfo.getEpoch() +
-          " is less than the last promised epoch " +
-          lastPromisedEpoch.get());
-    } else if (reqInfo.getEpoch() > lastPromisedEpoch.get()) {
+    long lpe;
+    if(lastPromisedEpoch->get(lpe) != 0)
+        return -1;
+    if (reqInfo.getEpoch() < lpe) {
+      LOG.error("IPC's epoch %d is less than the last promised epoch %d ",
+              reqInfo.getEpoch(), lpe);
+      return -1;
+    } else if (reqInfo.getEpoch() > lpe) {
       // A newer client has arrived. Fence any previous writers by updating
       // the promise.
-      updateLastPromisedEpoch(reqInfo.getEpoch());
+      if(updateLastPromisedEpoch(lpe, reqInfo.getEpoch()) != 0){
+          return -1;
+      }
     }
 
     // Ensure that the IPCs are arriving in-order as expected.
-    checkSync(reqInfo.getIpcSerialNumber() > currentEpochIpcSerial,
-        "IPC serial %s from client %s was not higher than prior highest " +
-        "IPC serial %s", reqInfo.getIpcSerialNumber(),
-        Server.getRemoteIp(),
-        currentEpochIpcSerial);
+    if(reqInfo.getIpcSerialNumber() <= currentEpochIpcSerial) {
+        LOG.error("IPC serial %s from client was not higher than prior highest IPC serial %s",
+                reqInfo.getIpcSerialNumber(), currentEpochIpcSerial);
+        return -1;
+    }
     currentEpochIpcSerial = reqInfo.getIpcSerialNumber();
 
     if (reqInfo.hasCommittedTxId()) {
-      Preconditions.checkArgument(
-          reqInfo.getCommittedTxId() >= committedTxnId.get(),
-          "Client trying to move committed txid backward from " +
-          committedTxnId.get() + " to " + reqInfo.getCommittedTxId());
+        long cti;
+        if(committedTxnId->get(cti) != 0) {
+            return -1;
+        }
+      if (reqInfo.getCommittedTxId() < cti) {
+          LOG.error("Client trying to move committed txid backward from %d to ",
+                  cti, reqInfo.getCommittedTxId());
+          return -1;
+      }
 
-      committedTxnId.set(reqInfo.getCommittedTxId());
+      return committedTxnId->set(reqInfo.getCommittedTxId());
     }
+
+    return 0;
 }
-
-
 
 } /* namespace JournalServiceServer */

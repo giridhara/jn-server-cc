@@ -8,12 +8,13 @@
 #ifndef BESTEFFORTLONGFILE_H_
 #define BESTEFFORTLONGFILE_H_
 
-#include<string>
-#include<iostream>
-#include<iomanip>
-#include<fstream>
-#include<sstream>
-#include<stdlib.h>
+#include <string>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+#include <stdlib.h>
+#include "Logger.h"
 
 using namespace std;
 
@@ -40,6 +41,13 @@ private:
 
 public:
 
+    BestEffortLongFile() :
+        filename(),
+        defaultVal(-1),
+        value(-1),
+        opened(false)
+    {}
+
     BestEffortLongFile(string file, long defaultVal)
         :
         filename(file),
@@ -48,6 +56,11 @@ public:
     {
         opened = false;
         value = -1;
+    }
+    ~BestEffortLongFile(){
+        if(ostrm.is_open()) {
+            ostrm.close();
+        }
     }
 
     int get(long& val) {

@@ -35,6 +35,7 @@ class PersistentLongFile {
         :
         file(file),
         defaultVal(defaultVal),
+        value(defaultVal),
         loaded(false)
     {}
 
@@ -88,12 +89,12 @@ class PersistentLongFile {
             ifs.close();
             return -1;
         }
+        ifs.close();
         char *end;
         const char *cstring = line.c_str();
         val = strtol(cstring, &end, 10);
         if(end != cstring+line.length())
             return -1;
-        ifs.close();
         result = val;
         return 0;
     }

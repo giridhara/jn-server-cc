@@ -14,7 +14,9 @@
 //#include "../common/Properties.h"
 #include "../util/Constants.h"
 #include "../util/PersistentLongFile.h"
+#include "../util/BestEffortLongFile.h"
 #include "../util/NamespaceInfo.h"
+#include "../util/RequestInfo.h"
 #include <boost/scoped_ptr.hpp>
 #include "../util/Logger.h"
 #include "../ice-qjournal-protocol/QJournalProtocolPB.h"
@@ -44,10 +46,13 @@ public:
           currentEpochIpcSerial(-1),
           lastPromisedEpoch(),
           lastWriterEpoch(),
-          committedTxnId(INVALID_TXID),
+          committedTxnId(),
           fjm(storage)
     {
         curSegment.reset(0);
+        lastPromisedEpoch.reset(0);
+        lastWriterEpoch.reset(0);
+        committedTxnId.reset(0);
  //       TODO :: have to read about how to handle failures in constructors in c++
             refreshCachedData();
 
@@ -62,12 +67,12 @@ public:
     int getLastPromisedEpoch(long& ret){
         checkFormatted();
         // get function below modifies argument only on successful execution
-        return lastPromisedEpoch.get(ret);
+        return lastPromisedEpoch->get(ret);
       }
 
     int getLastWriterEpoch(long& ret) {
         checkFormatted();
-        return lastWriterEpoch.get(ret);
+        return lastWriterEpoch->get(ret);
     }
 
 //      synchronized long getCurrentLagTxns() throws IOException {
@@ -105,7 +110,7 @@ private:
 
     int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
        LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);
-       if(lastPromisedEpoch.set(newEpoch) != 0 ){
+       if(lastPromisedEpoch->set(newEpoch) != 0 ){
            return -1;
        }
 
@@ -144,7 +149,7 @@ private:
      * by epoch number. In order to make such a promise, the epoch
      * number of that writer is stored persistently on disk.
      */
-    PersistentLongFile lastPromisedEpoch;
+    boost::scoped_ptr<PersistentLongFile> lastPromisedEpoch;
 
     /**
      * Each IPC that comes from a given client contains a serial number
@@ -163,7 +168,7 @@ private:
      * beginning of a segment. See the the 'testNewerVersionOfSegmentWins'
      * test case.
      */
-    PersistentLongFile lastWriterEpoch;
+    boost::scoped_ptr<PersistentLongFile> lastWriterEpoch;
 
     /**
      * Lower-bound on the last committed transaction ID. This is not
@@ -171,7 +176,7 @@ private:
      * during the recovery procedures, and as a visibility mark
      * for clients reading in-progress logs.
      */
-    long committedTxnId;
+    boost::scoped_ptr<BestEffortLongFile> committedTxnId;
 
     FileJournalManager fjm;
 };
