@@ -605,4 +605,29 @@ Journal::completeHalfDoneAcceptRecovery(
     return 0;
 }
 
+/**
+   * Persist data for recovering the given segment from disk.
+   */
+int
+Journal::persistPaxosData(long segmentTxId,
+      hadoop::hdfs::PersistedRecoveryPaxosData& newData) {
+    string f = storage.getPaxosFile(segmentTxId);
+    //TODO: trying to write atomically here by writing to .tmp file first; upon successful write renaming it to file without .tmp extension
+    string ftemp(f+".tmp");
+    ofstream fos(ftemp.c_str());
+    if(!fos.is_open()) {
+        return -1;
+    }
+    bool success = newData.SerializeToOstream(&fos);
+    if(!success) {
+        LOG.error("SerializeToOstream method failed");
+        fos.close();
+        file_delete(ftemp);
+        return -1;
+    }
+    fos.flush();
+    fos.close();
+    return file_rename(ftemp, f);
+}
+
 } /* namespace JournalServiceServer */

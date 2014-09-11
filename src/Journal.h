@@ -123,6 +123,7 @@ private:
     int purgePaxosDecision(long segmentTxId);
     int getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized);
     int completeHalfDoneAcceptRecovery(hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized);
+    int persistPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& newData);
 
     int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
        LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);
