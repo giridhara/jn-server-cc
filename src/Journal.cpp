@@ -614,7 +614,7 @@ Journal::persistPaxosData(long segmentTxId,
     string f = storage.getPaxosFile(segmentTxId);
     //TODO: trying to write atomically here by writing to .tmp file first; upon successful write renaming it to file without .tmp extension
     string ftemp(f+".tmp");
-    ofstream fos(ftemp.c_str());
+    ofstream fos(ftemp.c_str(), ios::out | ios::trunc | ios::binary);
     if(!fos.is_open()) {
         return -1;
     }
