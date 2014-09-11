@@ -21,6 +21,8 @@
 #include "../util/Logger.h"
 #include "../ice-qjournal-protocol/QJournalProtocolPB.h"
 
+//#include <fstream>
+
 using std::string;
 
 //using namespace KFS;
@@ -94,6 +96,7 @@ public:
     int journal(RequestInfo& reqInfo,
           long segmentTxId, long firstTxnId,
           int numTxns, const char* records);
+    int prepareRecovery(RequestInfo& reqInfo, long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret);
 
 private:
     void refreshCachedData();
@@ -118,6 +121,8 @@ private:
     int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
 
     int purgePaxosDecision(long segmentTxId);
+    int getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized);
+    int completeHalfDoneAcceptRecovery(hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized);
 
     int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
        LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);

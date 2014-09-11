@@ -81,6 +81,10 @@ const int file_rename(const string& from, const string& to ) {
     return rename(from.c_str(), to.c_str());
 }
 
+const int file_delete(const string& name) {
+    return remove(name.c_str());
+}
+
 }
 
 #endif //UTIL_JNSERVICE_MISC_UTILS

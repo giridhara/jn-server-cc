@@ -386,6 +386,8 @@ Journal::startLogSegment(RequestInfo& reqInfo, long txid,
 
     curSegmentTxId = txid;
     nextTxId = txid;
+
+    return 0;
 }
 
 int
@@ -446,6 +448,126 @@ Journal::journal(RequestInfo& reqInfo,
     nextTxId = lastTxnId + 1;
 
     return 0;
-  }
+}
+
+/**
+   * Remove the previously-recorded 'accepted recovery' information
+   * for a given log segment, once it is no longer necessary.
+   * @param segmentTxId the transaction ID to purge
+   * @throws IOException if the file could not be deleted
+   */
+int
+Journal::purgePaxosDecision(long segmentTxId) {
+    string paxosFile = storage.getPaxosFile(segmentTxId);
+    if (file_exists(paxosFile)) {
+      if (!file_delete(paxosFile)) {
+        LOG.error("Unable to delete paxos file %s", paxosFile.c_str());
+        return -1;
+      }
+    }
+    return 0;
+}
+
+/**
+ * @see QJournalProtocol#prepareRecovery(RequestInfo, long)
+ */
+int
+Journal::prepareRecovery(
+    RequestInfo& reqInfo, long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret){
+    if(checkFormatted() != 0 ) {
+        return -1;
+    }
+    if(checkRequest(reqInfo)!=0){
+        return -1;
+    }
+
+    if(abortCurSegment() != 0){
+        return -1;
+    }
+
+    hadoop::hdfs::PersistedRecoveryPaxosData previouslyAccepted;
+    bool isPRPDInitialized = false;
+    if( getPersistedPaxosData(segmentTxId, previouslyAccepted, isPRPDInitialized) != 0 ) {
+        return -1;
+    }
+
+    if(completeHalfDoneAcceptRecovery(previouslyAccepted, isPRPDInitialized) != 0 ) {
+        return -1;
+    }
+
+    hadoop::hdfs::SegmentStateProto segInfo;
+    bool isSSPInitialized = false;
+    if(getSegmentInfo(segmentTxId, segInfo, isSSPInitialized) != 0 ) {
+        return -1;
+    }
+
+    bool hasFinalizedSegment = isSSPInitialized && !(segInfo.isinprogress());
+
+    if (isPRPDInitialized && !hasFinalizedSegment) {
+        hadoop::hdfs::SegmentStateProto acceptedState = previouslyAccepted.segmentstate();
+        //TODO: converted java assert in to statement below, might have to revisit this decision.
+        if(acceptedState.endtxid() != segInfo.endtxid()) {
+            LOG.error("prev accepted: [%d, %d] \n on disk: [%d, %d]",
+                    acceptedState.starttxid(), acceptedState.endtxid(),
+                    segInfo.starttxid(),segInfo.endtxid());
+            return -1;
+        }
+        ret.set_acceptedinepoch(previouslyAccepted.acceptedinepoch());
+        ret.set_allocated_segmentstate(new hadoop::hdfs::SegmentStateProto(acceptedState));
+    }else {
+        if (isSSPInitialized) {
+            ret.set_allocated_segmentstate(new hadoop::hdfs::SegmentStateProto(segInfo));
+        }
+    }
+    long lwe;
+    if(lastWriterEpoch->get(lwe) != 0){
+        return -1;
+    }
+    ret.set_lastwriterepoch(lwe);
+
+    long cti;
+    if(committedTxnId->get(cti) != 0){
+        return -1;
+    }
+    if (cti != INVALID_TXID) {
+        ret.set_lastcommittedtxid(cti);
+    }
+
+    LOG.info("Prepared recovery for segment %d", segmentTxId);
+    return 0;
+}
+
+/**
+  * Retrieve the persisted data for recovering the given segment from disk.
+  */
+int
+Journal::getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized) {
+    string paxosFileName = storage.getPaxosFile(segmentTxId);
+    if (!file_exists(paxosFileName)) {
+     // Default instance has no fields filled in (they're optional)
+     isInitialized = false;
+     return 0;
+    }
+
+    ifstream in(paxosFileName.c_str(), ios::in | ios::binary);
+    if(!in.is_open()) {
+       return -1;
+    }
+    hadoop::hdfs::PersistedRecoveryPaxosData tempPaxosData;
+    bool parseSuccess = tempPaxosData.ParseFromIstream(&in);
+    in.close();
+    if ( !parseSuccess) {
+       LOG.error("parsing persisted paxos data for segment %d is unsuccessful", segmentTxId);
+       return -1;
+    }
+
+    if (tempPaxosData.segmentstate().starttxid() != segmentTxId) {
+       LOG.error("Bad persisted data for segment %d : %d ", segmentTxId, tempPaxosData.segmentstate().starttxid());
+       return -1;
+    }
+    ret = tempPaxosData;
+    isInitialized = true;
+    return 0;
+}
 
 } /* namespace JournalServiceServer */

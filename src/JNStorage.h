@@ -79,6 +79,16 @@ public:
         return 0;
     }
 
+    /**
+       * @return the path for the file which contains persisted data for the
+       * paxos-like recovery process for the given log segment.
+       */
+    string getPaxosFile(long segmentTxId) {
+        ostringstream ostr;
+        ostr << getPaxosDir() << "/" << segmentTxId;
+        return ostr.str();
+    }
+
     string getVersionFile() {
         ostringstream ostr;
         ostr << currentDir  << "/" << STORAGE_FILE_VERSION;
