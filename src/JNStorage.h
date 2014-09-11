@@ -43,7 +43,7 @@ public:
 
     const string getInProgressEditLog(long startTxId) const{
         ostringstream ostr;
-        ostr << logDir << "/" << "edits_inprogress_" << startTxId;
+        ostr << currentDir << "/" << "edits_inprogress_" << startTxId;
         return ostr.str();
     }
 
@@ -55,7 +55,19 @@ public:
 
     const string getPaxosDir() const {
         ostringstream ostr;
-        ostr << logDir << "/"  << "paxos";
+        ostr << currentDir << "/"  << "paxos";
+        return ostr.str();
+    }
+    /**
+       * @param segmentTxId the first txid of the segment
+       * @param epoch the epoch number of the writer which is coordinating
+       * recovery
+       * @return the temporary path in which an edits log should be stored
+       * while it is being downloaded from a remote JournalNode
+       */
+    string getSyncLogTemporaryFile(long segmentTxId, long epoch) {
+        ostringstream ostr;
+        ostr << getInProgressEditLog(segmentTxId) << ".epoch=" << epoch;
         return ostr.str();
     }
 

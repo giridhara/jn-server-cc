@@ -570,4 +570,39 @@ Journal::getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecovery
     return 0;
 }
 
+/**
+   * In the case the node crashes in between downloading a log segment
+   * and persisting the associated paxos recovery data, the log segment
+   * will be left in its temporary location on disk. Given the paxos data,
+   * we can check if this was indeed the case, and &quot;roll forward&quot;
+   * the atomic operation.
+   *
+   * See the inline comments in
+   * {@link #acceptRecovery(RequestInfo, SegmentStateProto, URL)} for more
+   * details.
+   *
+   * @throws IOException if the temporary file is unable to be renamed into
+   * place
+   */
+int
+Journal::completeHalfDoneAcceptRecovery(
+      hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized) {
+    if (!isInitialized) {
+        return 0;
+    }
+
+    long segmentId = paxosData.segmentstate().starttxid();
+    long epoch = paxosData.acceptedinepoch();
+
+    string tmp = storage.getSyncLogTemporaryFile(segmentId, epoch);
+
+    if (file_exists(tmp)) {
+        string dst = storage.getInProgressEditLog(segmentId);
+        LOG.info("Rolling forward previously half-completed synchronization: %s -> %s", tmp.c_str(), dst.c_str());
+        return file_rename(tmp, dst);
+    }
+
+    return 0;
+}
+
 } /* namespace JournalServiceServer */
