@@ -58,6 +58,10 @@ namespace JournalServiceServer
 
       int close();
 
+      int writeRaw(const char* records, int offset, int length);
+      void setReadyToFlush();
+      void flush(bool& shouldFsync);
+
     private:
       string filename;
   };

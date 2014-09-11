@@ -388,4 +388,64 @@ Journal::startLogSegment(RequestInfo& reqInfo, long txid,
     nextTxId = txid;
 }
 
+int
+Journal::journal(RequestInfo& reqInfo,
+      long segmentTxId, long firstTxnId,
+      int numTxns, const char* records) {
+
+    if(checkFormatted() != 0 ) {
+        return -1;
+    }
+
+    if(checkWriteRequest(reqInfo) != 0) {
+        return -1;
+    }
+
+    if(!curSegment){
+        LOG.error("Can't write, no segment open");
+    }
+
+    if (curSegmentTxId != segmentTxId) {
+      // Sanity check: it is possible that the writer will fail IPCs
+      // on both the finalize() and then the start() of the next segment.
+      // This could cause us to continue writing to an old segment
+      // instead of rolling to a new one, which breaks one of the
+      // invariants in the design. If it happens, abort the segment
+      // and throw an exception.
+      LOG.error("Writer out of sync: it thinks it is writing segment %d but current segment is %d",
+              segmentTxId, curSegmentTxId);
+      if(abortCurSegment() != 0) {
+          return -1;
+      }
+      return -1;
+    }
+
+    if(nextTxId != firstTxnId) {
+        LOG.error("Can't write txid %d expecting nextTxId=", firstTxnId, nextTxId);
+        return -1;
+    }
+
+    long lastTxnId = firstTxnId + numTxns - 1;
+    LOG.debug("Writing txid %d-%d", firstTxnId, lastTxnId);
+
+    // If the edit has already been marked as committed, we know
+    // it has been fsynced on a quorum of other nodes, and we are
+    // "catching up" with the rest. Hence we do not need to fsync.
+    long ctid;
+    if(committedTxnId->get(ctid) != 0) {
+        return -1;
+    }
+    bool isLagging = lastTxnId <= ctid;
+    bool shouldFsync = !isLagging;
+
+    curSegment->writeRaw(records, 0, static_cast<int>(strlen(records)));
+    curSegment->setReadyToFlush();
+    curSegment->flush(shouldFsync);
+
+    highestWrittenTxId = lastTxnId;
+    nextTxId = lastTxnId + 1;
+
+    return 0;
+  }
+
 } /* namespace JournalServiceServer */
