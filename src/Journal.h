@@ -91,12 +91,18 @@ public:
     }
 
     int newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret);
-    int startLogSegment(RequestInfo& reqInfo, long txid, int layoutVersion);
-    int finalizeLogSegment(RequestInfo& reqInfo, long startTxId, long endTxId);
-    int journal(RequestInfo& reqInfo,
+    int format(const NamespaceInfo& nsInfo);
+    int startLogSegment(const RequestInfo& reqInfo, const long txid, const int layoutVersion);
+    int finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId, const long endTxId);
+    int journal(const RequestInfo& reqInfo,
           long segmentTxId, long firstTxnId,
           int numTxns, const char* records);
-    int prepareRecovery(RequestInfo& reqInfo, long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret);
+    int prepareRecovery(const RequestInfo& reqInfo, const long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret);
+    int acceptRecovery(const RequestInfo& reqInfo, const hadoop::hdfs::SegmentStateProto segment, const string& fromUrl);
+    int getEditLogManifest(const long sinceTxId, const bool inProgressOk, vector<EditLogFile>& ret);
+    bool isFormatted() {
+        return storage.isFormatted();
+    }
 
 private:
     void refreshCachedData();
@@ -109,14 +115,10 @@ private:
        return 0;
      }
 
-    bool isFormatted() {
-        return storage.isFormatted();
-    }
-
     int scanStorageForLatestEdits(EditLogFile& ret);
-    int format(NamespaceInfo& nsInfo);
-    int checkRequest(RequestInfo& reqInfo);
-    int checkWriteRequest(RequestInfo& reqInfo);
+
+    int checkRequest(const RequestInfo& reqInfo);
+    int checkWriteRequest(const RequestInfo& reqInfo);
 
     int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
 
@@ -149,6 +151,8 @@ private:
 
         return 0;
     }
+
+    int checkIfLogsInSequence(const vector<EditLogFile>& vec);
 
 
     boost::scoped_ptr<JNClientOutputStream> curSegment;

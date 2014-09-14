@@ -10,22 +10,126 @@
 namespace JournalServiceServer
 {
 
-CallStatus
+int
 JournalNodeRpcServer::isFormatted(const string& journalId, bool& result){
-    cout << "jid received from client is " << journalId << endl;
-    result = false;
-    CallStatus cs(0, "");
-    return cs;
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(journalId, journal);
+    if(rc != 0) {
+        return -1;
+    }
+
+    result = journal->isFormatted();
+    return 0;
 }
 
-CallStatus
-JournalNodeRpcServer::getJournalState(const string& journalId, hadoop::hdfs::GetJournalStateResponseProto& resp){
-    cout << "inside getJournalState :: jid received from client is " << journalId << endl;
-    resp.set_lastpromisedepoch(1);
-    resp.set_httpport(123456);
-    resp.set_fromurl("www.walmart.com");
-    CallStatus cs(0, "");
-    return cs;
+int
+JournalNodeRpcServer::getJournalState(const string& journalId,
+        hadoop::hdfs::GetJournalStateResponseProto& ret){
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(journalId, journal);
+    if(rc != 0) {
+        return -1;
+    }
+
+    long epoch;
+    rc = journal->getLastPromisedEpoch(epoch);
+    if(rc != 0) {
+        return -1;
+    }
+    ret.set_lastpromisedepoch(epoch);
+    ret.set_httpport(jn.getPort());
+    ret.set_fromurl(jn.getHttpServerURI());
+    return 0;
+}
+
+int
+JournalNodeRpcServer::newEpoch(const string& journalId, NamespaceInfo& nsInfo,
+             const uint64_t epoch, hadoop::hdfs::NewEpochResponseProto& ret){
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(journalId, journal);
+    if(rc != 0) {
+        return -1;
+    }
+    return journal->newEpoch(nsInfo, epoch, ret);
+}
+
+int
+JournalNodeRpcServer::format(const string& journalId, const NamespaceInfo& nsInfo) {
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(journalId, journal);
+    if(rc != 0) {
+        return -1;
+    }
+    return journal->format(nsInfo);
+}
+
+int
+JournalNodeRpcServer::journal(const RequestInfo& reqInfo, const long segmentTxId,
+            const long firstTxnId, const int numTxns, const char* records){
+    Journal* journalPtr = 0;
+    int rc = jn.getOrCreateJournal(reqInfo.getJournalId(), journalPtr);
+    if(rc != 0) {
+        return -1;
+    }
+    return journalPtr->journal(reqInfo, segmentTxId, firstTxnId, numTxns, records);
+}
+
+int
+JournalNodeRpcServer::startLogSegment(const RequestInfo& reqInfo,
+      const long txid, const int layoutVersion) {
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(reqInfo.getJournalId(), journal);
+    if(rc != 0) {
+        return -1;
+    }
+    return journal->startLogSegment(reqInfo, txid, layoutVersion);
+}
+
+int
+JournalNodeRpcServer::finalizeLogSegment(const RequestInfo& reqInfo,
+      const long startTxId, const long endTxId) {
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(reqInfo.getJournalId(), journal);
+    if(rc != 0) {
+        return -1;
+    }
+    return journal->finalizeLogSegment(reqInfo, startTxId, endTxId );
+}
+
+int
+JournalNodeRpcServer::getEditLogManifest(const string& jid, const long sinceTxId,
+          const bool inProgressOk, hadoop::hdfs::GetEditLogManifestResponseProto& ret){
+//    RemoteEditLogManifest manifest = jn.getOrCreateJournal(jid)
+//            .getEditLogManifest(sinceTxId, inProgressOk);
+//
+//    return GetEditLogManifestResponseProto.newBuilder()
+//        .setManifest(PBHelper.convert(manifest))
+//        .setHttpPort(jn.getBoundHttpAddress().getPort())
+//        .setFromURL(jn.getHttpServerURI())
+//        .build();
+    return 0;
+}
+
+int
+JournalNodeRpcServer::prepareRecovery(const RequestInfo& reqInfo,
+      const long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret){
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(reqInfo.getJournalId(), journal);
+    if(rc != 0) {
+        return -1;
+    }
+    return journal->prepareRecovery(reqInfo, segmentTxId, ret);
+}
+
+int
+JournalNodeRpcServer::acceptRecovery(const RequestInfo& reqInfo,
+          const hadoop::hdfs::SegmentStateProto& stateToAccept, const string& fromUrl){
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(reqInfo.getJournalId(), journal);
+    if(rc != 0) {
+        return -1;
+    }
+    return journal->acceptRecovery(reqInfo, stateToAccept,fromUrl);
 }
 
 } /* namespace JournalServiceServer */

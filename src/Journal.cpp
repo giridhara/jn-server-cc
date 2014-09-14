@@ -72,7 +72,7 @@ Journal::scanStorageForLatestEdits(EditLogFile& ret) {
 }
 
 int
-Journal::format(NamespaceInfo& nsInfo) {
+Journal::format(const NamespaceInfo& nsInfo) {
     if(nsInfo.getNamespaceID() == 0) {
         LOG.error("can't format with uninitialized namespace info");
         return -1;
@@ -134,7 +134,7 @@ Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochRespo
    * @throws IOException if the request is invalid.
 */
 int
-Journal::checkRequest(RequestInfo& reqInfo) {
+Journal::checkRequest(const RequestInfo& reqInfo) {
     // Invariant 25 from ZAB paper
     long lpe;
     if(lastPromisedEpoch->get(lpe) != 0)
@@ -177,7 +177,7 @@ Journal::checkRequest(RequestInfo& reqInfo) {
 }
 
 int
-Journal::checkWriteRequest(RequestInfo& reqInfo) {
+Journal::checkWriteRequest(const RequestInfo& reqInfo) {
     if(checkRequest(reqInfo)!=0) {
         return -1;
     }
@@ -199,8 +199,8 @@ Journal::checkWriteRequest(RequestInfo& reqInfo) {
    * Finalize the log segment at the given transaction ID.
    */
 int
-Journal::finalizeLogSegment(RequestInfo& reqInfo, long startTxId,
-      long endTxId) {
+Journal::finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId,
+      const long endTxId) {
     if(checkFormatted() != 0 ) {
         return -1;
     }
@@ -308,8 +308,8 @@ Journal::getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, 
    * must have already been finalized.
    */
 int
-Journal::startLogSegment(RequestInfo& reqInfo, long txid,
-      int layoutVersion) {
+Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
+      const int layoutVersion) {
     //TODO : Have to implement below assert.
     //assert fjm != null;
 
@@ -391,7 +391,7 @@ Journal::startLogSegment(RequestInfo& reqInfo, long txid,
 }
 
 int
-Journal::journal(RequestInfo& reqInfo,
+Journal::journal(const RequestInfo& reqInfo,
       long segmentTxId, long firstTxnId,
       int numTxns, const char* records) {
 
@@ -473,7 +473,7 @@ Journal::purgePaxosDecision(long segmentTxId) {
  */
 int
 Journal::prepareRecovery(
-    RequestInfo& reqInfo, long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret){
+    const RequestInfo& reqInfo, const long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret){
     if(checkFormatted() != 0 ) {
         return -1;
     }
@@ -628,6 +628,68 @@ Journal::persistPaxosData(long segmentTxId,
     fos.flush();
     fos.close();
     return file_rename(ftemp, f);
+}
+
+/**
+   * Check that the logs are non-overlapping sequences of transactions,
+   * in sorted order. They do not need to be contiguous.
+   * @throws IllegalStateException if incorrect
+   */
+int
+Journal::checkIfLogsInSequence(const vector<EditLogFile>& vec) {
+    const EditLogFile* prev = 0;
+    for (vector<EditLogFile>::const_iterator iter = vec.begin() ; iter != vec.end(); ++iter) {
+        if (prev != 0) {
+            if((*iter).getFirstTxId() <= prev->getLastTxId()) {
+                LOG.error("Invalid log manifest (log [%d, %d] overlaps [%d, %d]",
+                        (*iter).getFirstTxId(), (*iter).getLastTxId(),
+                        prev->getFirstTxId(), prev->getLastTxId());
+                return -1;
+            }
+        }
+        prev = &(*iter);
+    }
+    return 0;
+}
+
+int
+Journal::getEditLogManifest(const long sinceTxId, const bool inProgressOk, vector<EditLogFile>& ret) {
+    // No need to checkRequest() here - anyone may ask for the list
+    // of segments.
+    if(checkFormatted() != 0 ) {
+        return -1;
+    }
+
+    vector<EditLogFile> temp;
+
+    fjm.getRemoteEditLogs(sinceTxId, inProgressOk, temp);
+
+    if (inProgressOk) {
+      EditLogFile* log = 0;
+      vector<EditLogFile>::iterator iter = temp.begin();
+      while (iter != temp.end())
+      {
+          log = &(*iter);
+          if(log->isInProgress()){
+              // erase returns the new iterator
+              iter = temp.erase(iter);
+              break;
+          }else{
+              ++iter;
+          }
+      }
+      if (log != 0 && log->isInProgress()) {
+          EditLogFile elf(" ", log->getFirstTxId(), getHighestWrittenTxId(), true);
+        temp.push_back(elf);
+      }
+    }
+
+    if(checkIfLogsInSequence(temp) != 0) {
+        return -1;
+    }
+
+    ret = temp;
+    return 0;
 }
 
 } /* namespace JournalServiceServer */

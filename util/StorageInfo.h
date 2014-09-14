@@ -54,7 +54,7 @@ public:
     * Assigned to the file system at formatting and never changes after that.
     * Shared by all file system components.
     */
-    int getNamespaceID() { return namespaceID; }
+    int getNamespaceID() const { return namespaceID; }
 
     /**
     * cluster id of the file system.<p>

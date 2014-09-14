@@ -12,7 +12,13 @@ namespace JournalServiceServer
 
 int
 JournalNode::getLogDir(string& jid, string& logDir) {
-    string dir = conf.getValue(DFS_JOURNALNODE_EDITS_DIR_KEY,DFS_JOURNALNODE_EDITS_DIR_DEFAULT);
+    string dir;
+    map<string,string>::iterator it = conf.find(DFS_JOURNALNODE_EDITS_DIR_KEY);
+    if(it != conf.end()) {
+        dir = it->second;
+    }else {
+        dir = DFS_JOURNALNODE_EDITS_DIR_DEFAULT;
+    }
     if(jid.empty()) {
         return -1;
     }

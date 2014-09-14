@@ -35,19 +35,19 @@ class RequestInfo {
             committedTxId(reqInfo.has_committedtxid()? reqInfo.committedtxid() : INVALID_TXID)
         {}
 
-        long getEpoch() {
-        return epoch;
+        long getEpoch() const {
+            return epoch;
         }
 
         void setEpoch(long epoch) {
             this->epoch = epoch;
         }
 
-        string getJournalId() {
+        string getJournalId() const{
             return jid;
         }
 
-        long getIpcSerialNumber() {
+        long getIpcSerialNumber() const {
             return ipcSerialNumber;
         }
 
@@ -55,11 +55,11 @@ class RequestInfo {
             this->ipcSerialNumber = ipcSerialNumber;
         }
 
-        long getCommittedTxId() {
+        long getCommittedTxId() const {
             return committedTxId;
         }
 
-        bool hasCommittedTxId() {
+        bool hasCommittedTxId() const {
             return (committedTxId != INVALID_TXID);
         }
 };

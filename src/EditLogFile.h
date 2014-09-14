@@ -78,11 +78,11 @@ public:
 
     virtual ~EditLogFile() {}
 
-    const long getFirstTxId() {
+    const long getFirstTxId() const{
       return firstTxId;
     }
 
-    long getLastTxId() {
+    long getLastTxId() const{
       return lastTxId;
     }
 

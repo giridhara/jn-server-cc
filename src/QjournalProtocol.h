@@ -23,23 +23,23 @@ public :
    * @return true if the given journal has been formatted and
    * contains valid data.
    */
-  virtual CallStatus isFormatted(const string& journalId, bool&) = 0;
+  virtual int isFormatted(const string& journalId, bool&) = 0;
 
   /**
    * Get the current state of the journal, including the most recent
    * epoch number and the HTTP port.
    */
-  virtual CallStatus getJournalState(const string& journalId, hadoop::hdfs::GetJournalStateResponseProto&) = 0;
+  virtual int getJournalState(const string& journalId, hadoop::hdfs::GetJournalStateResponseProto&) = 0;
 
   /**
    * Format the underlying storage for the given namespace.
    */
-  virtual CallStatus format(const string& journalId, const NamespaceInfo& nsInfo) = 0;
+  virtual int format(const string& journalId, const NamespaceInfo& nsInfo) = 0;
 
   /**
    * Begin a new epoch. See the HDFS-3077 design doc for details.
    */
-  virtual CallStatus newEpoch(const string& journalId, NamespaceInfo& nsInfo,
+  virtual int newEpoch(const string& journalId, NamespaceInfo& nsInfo,
           const uint64_t epoch, hadoop::hdfs::NewEpochResponseProto&) = 0;
 
   /**
@@ -47,8 +47,8 @@ public :
    * This message is sent by the active name-node to the JournalNodes
    * to write edits to their local logs.
    */
-  virtual CallStatus journal(RequestInfo& reqInfo, long segmentTxId,
-          long firstTxnId, int numTxns, const char* records) = 0;
+  virtual int journal(const RequestInfo& reqInfo, const long segmentTxId,
+          const long firstTxnId, const int numTxns, const char* records) = 0;
 
   /**
    * Start writing to a new log segment on the JournalNode.
@@ -58,7 +58,7 @@ public :
    * @param txid the first txid in the new log
    * @param layoutVersion the LayoutVersion of the new log
    */
-  virtual CallStatus startLogSegment(const RequestInfo& reqInfo,
+  virtual int startLogSegment(const RequestInfo& reqInfo,
       const long txid, const int layoutVersion) = 0;
 
   /**
@@ -69,7 +69,7 @@ public :
    * @param endTxId the expected last transaction in the given log
    * @throws IOException if no such segment exists
    */
-  virtual CallStatus finalizeLogSegment(const RequestInfo& reqInfo,
+  virtual int finalizeLogSegment(const RequestInfo& reqInfo,
       const long startTxId, const long endTxId) = 0;
 
   /**
@@ -79,21 +79,21 @@ public :
    *        segment
    * @return a list of edit log segments since the given transaction ID.
    */
-  virtual CallStatus getEditLogManifest(const string& jid, const long sinceTxId,
+  virtual int getEditLogManifest(const string& jid, const long sinceTxId,
           const bool inProgressOk, hadoop::hdfs::GetEditLogManifestResponseProto&) = 0;
 
   /**
    * Begin the recovery process for a given segment. See the HDFS-3077
    * design document for details.
    */
-  virtual CallStatus prepareRecovery(const RequestInfo& reqInfo,
+  virtual int prepareRecovery(const RequestInfo& reqInfo,
       const long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto&) = 0;
 
   /**
    * Accept a proposed recovery for the given transaction ID.
    */
-  virtual CallStatus acceptRecovery(const RequestInfo& reqInfo,
-          hadoop::hdfs::SegmentStateProto& stateToAccept, string fromUrl) = 0;
+  virtual int acceptRecovery(const RequestInfo& reqInfo,
+          const hadoop::hdfs::SegmentStateProto& stateToAccept, const string& fromUrl) = 0;
 };
 
 }

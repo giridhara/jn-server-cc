@@ -30,7 +30,7 @@ FileJournalManager::~FileJournalManager()
  * @throws IOException if edit logs cannot be listed.
  */
 void
-FileJournalManager::getRemoteEditLogs(long firstTxId, bool inProgressOk, vector<EditLogFile>& ret) {
+FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret) {
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
     matchEditLogs(currentDir, allLogFiles);
@@ -41,7 +41,7 @@ FileJournalManager::getRemoteEditLogs(long firstTxId, bool inProgressOk, vector<
         }
         //TODO : using EditLogFile itself in place of RemoteEditLog , as RemoteEditLog looks redundant for me
         // might have to revisit this decision
-        EditLogFile elf("", (*it).getFirstTxId(), (*it).getLastTxId(), false);
+        EditLogFile elf(" ", (*it).getFirstTxId(), (*it).getLastTxId(), false);
         if((*it).getFirstTxId() >= firstTxId) {
             ret.push_back(elf);
         } else if((*it).getFirstTxId() < firstTxId && firstTxId <= (*it).getLastTxId()) {

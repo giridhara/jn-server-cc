@@ -11,11 +11,9 @@
 #include "JournalNodeRpcServer.h"
 #include "util/JournalNodeConfigKeys.h"
 #include "Journal.h"
-#include "../common/Properties.h"
 #include <map>
 
 using std::map;
-using namespace KFS;
 
 namespace JournalServiceServer
 {
@@ -30,16 +28,23 @@ public:
         journalsById()
     {}
     virtual ~JournalNode();
+    string getHttpServerURI() {
+       return httpServerURI;
+    }
+    unsigned int getPort(){
+        return port;
+    }
+    int getOrCreateJournal(const string& jid, Journal* journal);
 private:
     int getLogDir(string& jid, string& logDir);
-    int getOrCreateJournal(const string& jid, Journal* journal);
 
-    Properties conf;
+    map<string, string> conf;
     JournalNodeRpcServer rpcServer;
 //    JournalNodeHttpServer httpServer;
     map<string, Journal*> journalsById;
     string httpServerURI;
     string localDir;
+    unsigned int port;
 };
 
 }
