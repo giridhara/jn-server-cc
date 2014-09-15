@@ -98,7 +98,7 @@ public:
           long segmentTxId, long firstTxnId,
           int numTxns, const char* records);
     int prepareRecovery(const RequestInfo& reqInfo, const long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret);
-    int acceptRecovery(const RequestInfo& reqInfo, const hadoop::hdfs::SegmentStateProto segment, const string& fromUrl);
+    int acceptRecovery(const RequestInfo& reqInfo, const hadoop::hdfs::SegmentStateProto& segment, const string& fromUrl);
     int getEditLogManifest(const long sinceTxId, const bool inProgressOk, vector<EditLogFile>& ret);
     bool isFormatted() {
         return storage.isFormatted();
@@ -126,6 +126,7 @@ private:
     int getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized);
     int completeHalfDoneAcceptRecovery(hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized);
     int persistPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& newData);
+    int syncLog(const RequestInfo& reqInfo, const hadoop::hdfs::SegmentStateProto& segment, const string& url, string& ret);
 
     int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
        LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);

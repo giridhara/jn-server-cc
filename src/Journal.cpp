@@ -692,4 +692,181 @@ Journal::getEditLogManifest(const long sinceTxId, const bool inProgressOk, vecto
     return 0;
 }
 
+int
+Journal::acceptRecovery(const RequestInfo& reqInfo,
+      const hadoop::hdfs::SegmentStateProto& segment, const string& fromUrl) {
+    if(checkFormatted() != 0 ) {
+        return -1;
+    }
+    if(checkRequest(reqInfo)!=0){
+        return -1;
+    }
+
+    if (abortCurSegment() != 0 ) {
+        return -1;
+    }
+
+    long segmentTxId = segment.starttxid();
+
+    // Basic sanity checks that the segment is well-formed and contains
+    // at least one transaction.
+    if (segment.endtxid()<=0 || segment.endtxid() < segmentTxId) {
+        LOG.error("bad recovery state for segment %d: [%d, %d]", segmentTxId, segment.starttxid(), segment.endtxid());
+        return -1;
+    }
+    bool isOldDataInitialized = false;
+    hadoop::hdfs::PersistedRecoveryPaxosData oldData;
+    getPersistedPaxosData(segmentTxId, oldData, isOldDataInitialized);
+    hadoop::hdfs::PersistedRecoveryPaxosData newData;
+    newData.set_acceptedinepoch(reqInfo.getEpoch());
+    hadoop::hdfs::SegmentStateProto* segmentCopy = new hadoop::hdfs::SegmentStateProto(segment);
+    newData.set_allocated_segmentstate(segmentCopy);
+
+    // If we previously acted on acceptRecovery() from a higher-numbered writer,
+    // this call is out of sync. We should never actually trigger this, since the
+    // checkRequest() call above should filter non-increasing epoch numbers.
+    if (isOldDataInitialized) {
+        if(oldData.acceptedinepoch() > reqInfo.getEpoch()) {
+            LOG.error("Bad paxos transition, out-of-order epochs.");
+            return -1;
+        }
+    }
+
+    string syncedFile;
+
+    bool isCurrentSegmentInitialized = false;
+    hadoop::hdfs::SegmentStateProto currentSegment;
+    getSegmentInfo(segmentTxId, currentSegment, isCurrentSegmentInitialized);
+    if (!isCurrentSegmentInitialized ||
+        currentSegment.endtxid() != segment.endtxid()) {
+      if (!isCurrentSegmentInitialized) {
+        LOG.info("Synchronizing log [%d, %d]  : no current segment in place", segment.starttxid(), segment.endtxid());
+
+        // Update the highest txid for lag metrics
+        if(segment.endtxid() > highestWrittenTxId) {
+            highestWrittenTxId = segment.endtxid();
+        }
+      } else {
+        LOG.info("Synchronizing log [%d, %d] : old segment [%d, %d] is not the right length",
+                segment.starttxid(), segment.endtxid(),
+                currentSegment.starttxid(), currentSegment.endtxid());
+
+        // Paranoid sanity check: if the new log is shorter than the log we
+        // currently have, we should not end up discarding any transactions
+        // which are already Committed.
+        long cti;
+        if (committedTxnId->get(cti) != 0){
+            return -1;
+        }
+
+        //TODO: Didn't implement  txnRange function for now, hence had to do below two checks.
+        //Might have to revisit this decision in case it is used many times
+        if(!currentSegment.has_endtxid()) {
+            LOG.error("invalid segment: [%d, %d]", currentSegment.starttxid(), currentSegment.endtxid());
+            return -1;
+        }
+
+        if(!segment.has_endtxid()) {
+            LOG.error("invalid segment: [%d, %d]", segment.starttxid(), segment.endtxid());
+            return -1;
+        }
+
+        if( (cti >= currentSegment.starttxid() && cti <= currentSegment.endtxid()) &&
+            (cti < segment.starttxid() || cti > segment.endtxid())) {
+            LOG.error("Cannot replace segment [%d, %d] with new segment [%d,%d] : would discard already-committed txn %d",
+                    currentSegment.starttxid(), currentSegment.endtxid(),
+                    segment.starttxid(), segment.endtxid(),
+                    cti);
+            return -1;
+        }
+
+        // Another paranoid check: we should not be asked to synchronize a log
+        // on top of a finalized segment.
+        if(!currentSegment.isinprogress()){
+            LOG.error("Should never be asked to synchronize a different log on top of an already-finalized segment");
+            return -1;
+        }
+
+        // If we're shortening the log, update our highest txid
+        // used for lag metrics.
+        if (highestWrittenTxId >= currentSegment.starttxid() &&
+                highestWrittenTxId <= currentSegment.endtxid()) {
+            highestWrittenTxId =  segment.endtxid();
+        }
+      }
+
+      if (syncLog(reqInfo, segment, fromUrl, syncedFile) != 0) {
+          return -1;
+      }
+    } else {
+      LOG.info("Skipping download of log [%d, %d] already have up-to-date logs",  segment.starttxid(), segment.endtxid() );
+    }
+
+    // This is one of the few places in the protocol where we have a single
+    // RPC that results in two distinct actions:
+    //
+    // - 1) Downloads the new log segment data (above)
+    // - 2) Records the new Paxos data about the synchronized segment (below)
+    //
+    // These need to be treated as a transaction from the perspective
+    // of any external process. We do this by treating the persistPaxosData()
+    // success as the "commit" of an atomic transaction. If we fail before
+    // this point, the downloaded edit log will only exist at a temporary
+    // path, and thus not change any externally visible state. If we fail
+    // after this point, then any future prepareRecovery() call will see
+    // the Paxos data, and by calling completeHalfDoneAcceptRecovery() will
+    // roll forward the rename of the referenced log file.
+    //
+    // See also: HDFS-3955
+    if (persistPaxosData(segmentTxId, newData) != 0) {
+        return -1;
+    }
+
+    if (!syncedFile.empty()) {
+      if( file_rename(syncedFile, storage.getInProgressEditLog(segmentTxId)) != 0 ){
+          return -1;
+      }
+    }
+
+    LOG.info("Accepted recovery for segment %d : [%d, %d] accepted in epoch %d", segmentTxId,
+            newData.segmentstate().starttxid(), newData.segmentstate().endtxid(), newData.acceptedinepoch());
+    return 0;
+  }
+
+/**
+   * Synchronize a log segment from another JournalNode. The log is
+   * downloaded from the provided URL into a temporary location on disk,
+   * which is named based on the current request's epoch.
+   *
+   * @return the temporary location of the downloaded file
+   */
+int
+Journal::syncLog(const RequestInfo& reqInfo,
+      const hadoop::hdfs::SegmentStateProto& segment, const string& url, string &ret) {
+    string tmpFile = storage.getSyncLogTemporaryFile(
+        segment.starttxid(), reqInfo.getEpoch());
+    return 0;
+//    final List<File> localPaths = ImmutableList.of(tmpFile);
+//
+//    LOG.info("Synchronizing log from %s", url);
+//
+//    bool success = false;
+//    try {
+//      TransferFsImage.doGetUrl(url, localPaths, storage, true);
+//      assert tmpFile.exists();
+//      success = true;
+//    } finally {
+//      if (!success) {
+//        if (!tmpFile.delete()) {
+//          LOG.warn("Failed to delete temporary file " + tmpFile);
+//        }
+//      }
+//    }
+//    return null;
+//
+//
+//    return tmpFile;
+
+  }
+
 } /* namespace JournalServiceServer */
