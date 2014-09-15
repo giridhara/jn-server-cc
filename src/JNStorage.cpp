@@ -32,22 +32,18 @@ JNStorage::writeProperties(string to) {
 
 int
 JNStorage::clearLogDirectory() {
-    boost::system::error_code error;
-    boost::filesystem::exists(currentDir.c_str(), error);
-    if (!error){
-        error.clear();
-        boost::filesystem::remove_all(currentDir, error);
-        if(error){
-            cout << "Cannot remove current directory: " << currentDir;
-            return -1;
+    bool dir_exists = false;
+    try{
+        dir_exists = boost::filesystem::exists(currentDir.c_str());
+        if (dir_exists){
+            boost::filesystem::remove_all(currentDir.c_str());
         }
-    }
-    error.clear();
-    boost::filesystem::create_directories(currentDir, error);
-    if(error){
-        cout << "could not create current dir " << currentDir;
+        boost::filesystem::create_directory(currentDir);
+    }catch (const boost::filesystem::filesystem_error& ex){
+        cout << ex.what() << '\n';
         return -1;
     }
+
     return 0;
 }
 

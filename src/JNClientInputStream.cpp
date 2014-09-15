@@ -22,159 +22,115 @@
 #include "../util/JNServiceMiscUtils.h"
 
 using namespace std;
-namespace hadoop
+
+namespace JournalServiceServer
 {
-namespace JournalServiceClient
-{
-  JNClientInputStream::JNClientInputStream(const string ostrm, const seq_t firstTxId, const seq_t lastTxId, const bool isInProgress):
-    mFirstTxId(firstTxId),mLastTxId(lastTxId),
-    mCurPosition(0),mNextTxId(firstTxId),
-    mInProgress(isInProgress), mStrm(ostrm) {}
+  JNClientInputStream::JNClientInputStream(const string ostrm):
+    mCurPosition(0),
+    mStrm(ostrm)
+  {}
 
-  JNClientStatus
-    JNClientInputStream::readLogs(TxLogs& logs)
-    {
-      JNClientStatus status(JNCLIENT_OK);
-      while (mNextTxId <= mLastTxId)
+int
+JNClientInputStream::scanLog(string& filename, long& lastTxId, bool& hasHeaderCorrupted) {
+    std::ifstream t(filename.c_str());
+    if(!t.is_open()) {
+      LOG.error("Could not open file %s", filename.c_str());
+      lastTxId = INVALID_TXID;
+      hasHeaderCorrupted = true;
+      return -1;
+    }
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    JNClientInputStream in(buffer.str());
+    t.close();
+    if (in.mCurPosition == 0) {
+      if (in.skipHeader() != 0)
       {
-        status = readOp();
-        if (status != JNCLIENT_OK)
-          break;
+        LOG.error("Error while parsing transaction logs while skipping header");
+        return -1;
       }
-      logs = mLogs;
-      return status;
     }
 
-  const bool
-    JNClientInputStream::operator>(const JNClientInputStream &other) const
-    {
-      // Finalized log is better than unfinalized
-      if (mInProgress != other.mInProgress)
-      {
-        return !mInProgress;
-      }
-      if (mFirstTxId > other.mFirstTxId)
-        return true;
-      return false;
-    }
-
-  const bool
-    JNClientInputStream::operator<(const JNClientInputStream &other) const
-    {
-      if (mInProgress != other.mInProgress)
-      {
-        return !mInProgress;
-      }
-      if (mFirstTxId < other.mFirstTxId)
-        return true;
-      return false;
-    }
-
-  const bool
-    JNClientInputStream::operator==(const JNClientInputStream &other) const
-    {
-      if (mInProgress != other.mInProgress)
-        return false;
-      if (mFirstTxId != other.mFirstTxId)
-        return false;
-      if (mLastTxId != other.mLastTxId)
-        return false;
-      return true;
-    }
-
-  JNClientStatus
-    JNClientInputStream::readOp()
-    {
-      JNClientStatus status(JNCLIENT_OK);
-
-      if (mCurPosition == 0)
-      {
-        status = skipHeader();
-        if (status != JNCLIENT_OK)
-        {
-          LOG.error("Error while parsing transaction logs while skipping header");
-          return status;
+    long lastPos = 0;
+    long tempLast = INVALID_TXID;
+    long numValid = 0;
+    while (true) {
+        long txid = INVALID_TXID;
+        lastPos = in.mCurPosition;
+        if (in.scanOp(txid) != 0) {
+          LOG.error("Got error after scanning over %d transactions at position %d", numValid, in.mCurPosition);
+          return -1;
         }
-      }
+        if (tempLast == INVALID_TXID || txid > tempLast) {
+            tempLast = txid;
+        }
+        numValid++;
+    }
+    lastTxId = tempLast;
+    hasHeaderCorrupted = false;
+    return 0;
+//        return new EditLogValidation(lastPos, lastTxId, false);
+}
 
-      unsigned char opcode;
-      status = readOpcode(opcode);
-      if ( status != JNCLIENT_OK)
-      {
-        LOG.error("Error while parsing transaction logs while getting opcode");
-        return status;
-      }
-      if (opcode != OPCODE)
-      {
-        LOG.error("Error while parsing transaction logs, obtained wrong opcode");
-        return JNCLIENT_FAIL_INPUT_STREAM_PARSE_LOGS;
-      }
-      int length;
-      status = readInt(length);
-      if (status != JNCLIENT_OK)
-      {
+/**
+   * Similar with decodeOp(), but instead of doing the real decoding, we skip
+   * the content of the op if the length of the editlog is supported.
+   * @return the last txid of the segment, or INVALID_TXID on exception
+*/
+int
+JNClientInputStream::scanOp(long& ret) {
+    unsigned char opcode;
+    if (readOpcode(opcode) != 0) {
+        LOG.error("Error while parsing transaction logs to get opcode");
+        ret = INVALID_TXID;
+        return -1;
+    }
+    int length;
+    if (readInt(length) != 0) {  // read the length of the op
         LOG.error("Error while parsing transaction logs, obtained wrong length");
-        return status;
-      }
-      seq_t txId;
-      status = readLong(txId);
-      if (status != JNCLIENT_OK)
-      {
+        return -1;
+    }
+    long txId;
+    if (readLong(txId) != 0) {  // read the txid
         LOG.error("Error while parsing transaction logs.");
-        return status;
-      }
-      if (txId != mNextTxId)
-      {
-        LOG.error("Obtained wrong txid, expected %u found %u",mNextTxId, txId);
-        return JNCLIENT_FAIL_INPUT_STREAM_PARSE_LOGS;
-      }
-      mNextTxId = txId + 1;
-
-      // read left over part of op which is tha data written = length - sizeof(length) -sizeof(txId)
-      string str;
-      status = readString(length-12, str);
-
-      if (status != JNCLIENT_OK)
-      {
-        LOG.error("Error while parsing transaction logs to get data");
-        return status;
-      }
-
-      int checksum;
-      status = readInt(checksum);
-      if (status != JNCLIENT_OK)
-      {
-        LOG.error("Error while parsing transaction logs to get checksum");
-        return status;
-      }
-      // TODO: Not doing anything with checksum currently.
-
-      Log log(txId, str);
-      mLogs.push_back(log);
-      return status;
+        return -1;
     }
 
-  JNClientStatus
+    // read left over part of op which is the data written = length - sizeof(length) -sizeof(txId)
+    if(scanString(length-12) != 0 ){
+        LOG.error("Error while parsing transaction logs to get data");
+        return -1;
+    }
+
+    int checksum;
+    if (readInt(checksum) != 0){
+        LOG.error("Error while parsing transaction logs to get checksum");
+        return -1;
+    }
+    ret = txId;
+    return 0;
+}
+
+  int
     JNClientInputStream::skipHeader()
     {
       int layoutVersion;
-      JNClientStatus status = readInt(layoutVersion);
-      if (status != JNCLIENT_OK) return status;
+      int status = readInt(layoutVersion);
+      if (status != 0) return -1;
 
       int layoutFlags;
       status = readInt(layoutFlags);
-      if (status != JNCLIENT_OK) return status;
+      if (status != 0) return -1;
       if (layoutFlags != 0)
-        status = JNCLIENT_FAIL_INPUT_STREAM_PARSE_LOGS;
+        status = -1;
       return status;
     }
 
-  JNClientStatus
-    JNClientInputStream::readOpcode(unsigned char& opcode)
-    {
-      opcode = mStrm[mCurPosition++];
-      return JNCLIENT_OK;
-    }
+int
+JNClientInputStream::readOpcode(unsigned char& opcode) {
+    opcode = mStrm[mCurPosition++];
+    return 0;
+}
 
   template <typename T>
     T
@@ -195,24 +151,23 @@ namespace JournalServiceClient
       }
       return dest.u;
     }
-  JNClientStatus
-    JNClientInputStream::readInt(int& i)
-    {
-      i = read_as_type<int>();
-      return JNCLIENT_OK;
-    }
-  JNClientStatus
-    JNClientInputStream::readLong(long& l)
-    {
-      l = read_as_type<long>();
-      return JNCLIENT_OK;
-    }
-  JNClientStatus
-    JNClientInputStream::readString(size_t length, string& data)
-    {
-      for (size_t i = 0; i < length; i++)
-        data += mStrm[mCurPosition++];
-      return JNCLIENT_OK;
-    }
+
+int
+JNClientInputStream::readInt(int& i) {
+    i = read_as_type<int>();
+    return 0;
 }
+
+int
+JNClientInputStream::readLong(long& l) {
+    l = read_as_type<long>();
+    return 0;
+}
+
+int
+JNClientInputStream::scanString(size_t length){
+    mCurPosition += length;
+    return 0;
+}
+
 }

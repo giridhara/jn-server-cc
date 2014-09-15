@@ -41,7 +41,7 @@ public:
     Journal(string conf, string logDir, string jid)
         :
           journalId(jid),
-          storage(conf, logDir),
+          storage(logDir),
           curSegmentTxId(INVALID_TXID),
           nextTxId(INVALID_TXID),
           highestWrittenTxId(0),

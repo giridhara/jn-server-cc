@@ -9,7 +9,7 @@
 #define JNSTORAGE_H_
 
 #include <boost/regex.hpp>
-#include </usr/local/include/boost/filesystem/operations.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <sstream>
 #include <fstream>
 #include "../util/StorageInfo.h"
@@ -30,7 +30,7 @@ class JNStorage : public StorageInfo
 {
 
 public:
-    JNStorage(string conf, string logDir) :
+    JNStorage(string logDir) :
         logDir(logDir),
         currentDir(logDir + "/" + "current")
     {
@@ -82,10 +82,11 @@ public:
     }
 
     int createPaxosDir() {
-        boost::system::error_code error;
         boost::filesystem::path dir(getPaxosDir());
-        boost::filesystem::create_directories(dir, error);
-        if (error) {
+        try{
+            boost::filesystem::create_directory(dir);
+        }catch (const boost::filesystem::filesystem_error& ex){
+            cout << ex.what() << '\n';
             return -1;
         }
         return 0;
@@ -121,9 +122,14 @@ private:
     int findFinalizedEditsFile(long startTxId, long endTxId, string& res) {
         ostringstream ostr;
         ostr << logDir << "/" << "edits_" << startTxId << "_" << endTxId;
-        boost::system::error_code error;
-        boost::filesystem::exists(ostr.str().c_str(), error);
-        if (error) {
+        bool exists = false;
+        try{
+            exists = boost::filesystem::exists(ostr.str().c_str());
+        }catch (const boost::filesystem::filesystem_error& ex){
+            cout << ex.what() << '\n';
+            return -1;
+        }
+        if (!exists) {
             return -1;
         }
 

@@ -49,6 +49,8 @@ public:
     int finalizeLogSegment(long firstTxId, long lastTxId);
     int startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>&);
 
+    void GetFilesInDirectory(std::vector<string>& out, const string& directory);
+
 private:
 
     JNStorage& jnStorage;

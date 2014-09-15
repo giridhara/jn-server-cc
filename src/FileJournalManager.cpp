@@ -8,11 +8,14 @@
 #include "FileJournalManager.h"
 #include "../util/JNServiceMiscUtils.h"
 #include <stdlib.h>
-#include "/usr/local/include/boost/filesystem/operations.hpp"
-#include </usr/local/include/boost/regex.hpp>
+#include <boost/regex.hpp>
 #include "../util/Constants.h"
 #include "../util/Logger.h"
 #include <algorithm>
+#include <stdio.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
 namespace JournalServiceServer
 {
@@ -133,20 +136,40 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
     LOG.error("More than one log segment in %s starting at txid %d" , dir.c_str(), startTxId);
     return -1;
 }
+
+void
+FileJournalManager::GetFilesInDirectory(std::vector<string> &out, const string &directory) {
+    DIR *dir;
+    class dirent *ent;
+    class stat st;
+
+    dir = opendir(directory.c_str());
+    while ((ent = readdir(dir)) != NULL) {
+        const string file_name = ent->d_name;
+        const string full_file_name = directory + "/" + file_name;
+
+//        if (file_name[0] == '.')
+//            continue;
+
+        if (stat(full_file_name.c_str(), &st) == -1)
+            continue;
+
+        const bool is_directory = (st.st_mode & S_IFDIR) != 0;
+
+        if (is_directory)
+            continue;
+
+        cout << "found file " << full_file_name << endl;
+        out.push_back(full_file_name);
+    }
+    closedir(dir);
+}
 //
 void FileJournalManager::matchEditLogs(string logDir,
         vector<EditLogFile>& ret)
 {
     vector<string> filenames;
-    boost::filesystem::directory_iterator begin(logDir);
-    boost::filesystem::directory_iterator end;
-    for (; begin != end; ++begin) {
-        if (boost::filesystem::is_regular_file(begin->status())) {
-            std::stringstream temp;
-            temp << begin->path().filename().string();
-            filenames.push_back(temp.str().c_str());
-        }
-    }
+    GetFilesInDirectory(filenames, logDir);
     return matchEditLogs(filenames, ret);
 }
 
@@ -196,7 +219,6 @@ int main() {
     }else {
         cout << "result code is non zero" << endl;
     }
-
 
     vector<JournalServiceServer::EditLogFile> elfv;
     fjm.getLogFiles(1, elfv);

@@ -9,7 +9,7 @@
 #define JOURNALNODE_H_
 
 #include "JournalNodeRpcServer.h"
-#include "util/JournalNodeConfigKeys.h"
+#include "../util/JournalNodeConfigKeys.h"
 #include "Journal.h"
 #include <map>
 
@@ -18,14 +18,16 @@ using std::map;
 namespace JournalServiceServer
 {
 
+class JournalNodeRpcServer;
+
 class JournalNode
 {
 public:
     JournalNode()
     :
-        conf(0),
-        rpcServer(0),
-        journalsById()
+ //       journalsById(),
+ //       conf(0),
+        rpcServer(0)
     {}
     virtual ~JournalNode();
     string getHttpServerURI() {
@@ -36,12 +38,12 @@ public:
     }
     int getOrCreateJournal(const string& jid, Journal* journal);
 private:
-    int getLogDir(string& jid, string& logDir);
+    int getLogDir(const string& jid, string& logDir);
 
-    map<string, string> conf;
-    JournalNodeRpcServer rpcServer;
+//    map<string, string> conf;
+    JournalNodeRpcServer* rpcServer;
 //    JournalNodeHttpServer httpServer;
-    map<string, Journal*> journalsById;
+//    map<const string, Journal*> journalsById;
     string httpServerURI;
     string localDir;
     unsigned int port;

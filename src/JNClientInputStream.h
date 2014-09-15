@@ -33,18 +33,50 @@
 
 
 #include <string>
+#include "../util/Logger.h"
+#include <stddef.h>
+
 using namespace std;
 
 namespace JournalServiceServer
 {
-  class JNClientInputStream
-  {
 
-    public:
+typedef long seq_t;
+typedef unsigned int size_t;
 
-    static int scanLog(string file, long& lastTxId, bool& corruptHeader);
+class JNClientInputStream
+{
 
-  };
+public:
+    JNClientInputStream(const string ostrm);
+    static int scanLog(string& filename, long& lastTxId, bool& corruptHeader);
+
+    const bool operator>(const JNClientInputStream &other) const;
+
+    const bool operator<(const JNClientInputStream &other) const;
+
+    const bool operator==(const JNClientInputStream &other) const;
+private:
+    int scanOp(long& ret);
+    int readOp();
+
+    int skipHeader();
+
+    int readOpcode(unsigned char& opcode);
+
+    template <typename T>
+      T read_as_type();
+
+    int readInt(int& i);
+
+    int readLong(long& l);
+
+    int scanString(size_t length);
+
+    size_t mCurPosition;
+    string mStrm;
+
+};
 }
 
 #endif //ICE_UTIL_JN_CLIENT_INPUT_STREAM_H

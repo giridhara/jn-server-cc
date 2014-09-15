@@ -64,6 +64,7 @@ namespace JournalServiceServer
 
     private:
       string filename;
+      ofstream  stream;
   };
 }
 #endif //JNCLIENT_OUTPUT_STREAM_H
