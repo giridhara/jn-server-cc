@@ -32,8 +32,10 @@
 #define JNCLIENT_OUTPUT_STREAM_H
 
 #include <string>
+#include <fstream>
 
 using std::string;
+using std::ofstream;
 
 namespace JournalServiceServer
 {
@@ -42,7 +44,8 @@ namespace JournalServiceServer
     public:
       JNClientOutputStream(const string filename)
         :
-          filename(filename)
+          filename(filename),
+          stream(filename.c_str())
       {}
       ~JNClientOutputStream();
 
@@ -56,11 +59,10 @@ namespace JournalServiceServer
           return filename;
       }
 
-      int close();
+      void close();
 
-      int writeRaw(const char* records, int offset, int length);
-      void setReadyToFlush();
-      void flush(bool& shouldFsync);
+      int writeRaw(const char* records);
+      bool flush();
 
     private:
       string filename;

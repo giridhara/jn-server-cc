@@ -20,8 +20,26 @@
 
 namespace JournalServiceServer
 {
-  JNClientOutputStream::~JNClientOutputStream()
-  {
-      close();
+JNClientOutputStream::~JNClientOutputStream()
+{
+    close();
+}
+
+void
+JNClientOutputStream::close(){
+    stream.close();
+}
+
+int
+JNClientOutputStream::writeRaw(const char* records) {
+      stream << records;
+      return 0;
   }
+
+bool
+JNClientOutputStream::flush(){
+    stream.flush();
+    return !stream.fail();
+}
+
 }

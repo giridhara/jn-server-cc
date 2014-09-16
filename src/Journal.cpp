@@ -440,12 +440,16 @@ Journal::journal(const RequestInfo& reqInfo,
     if(committedTxnId->get(ctid) != 0) {
         return -1;
     }
+    /* TODO :: every journanode irrespective of whether it is lagging or not
+     * will flush the record to the disk. Might want to revisit this decision in future.
     bool isLagging = lastTxnId <= ctid;
     bool shouldFsync = !isLagging;
-
-    curSegment->writeRaw(records, 0, static_cast<int>(strlen(records)));
-    curSegment->setReadyToFlush();
-    curSegment->flush(shouldFsync);
+    */
+    curSegment->writeRaw(records);
+    if(!curSegment->flush()) {
+        LOG.error("Not able to write record '%s'to disk ", records);
+        abort();
+    }
 
     highestWrittenTxId = lastTxnId;
     nextTxId = lastTxnId + 1;
