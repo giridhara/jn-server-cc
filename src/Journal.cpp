@@ -7,6 +7,7 @@
 
 #include "Journal.h"
 #include "../util/JNServiceMiscUtils.h"
+#include <stdlib.h>
 
 namespace JournalServiceServer
 {
@@ -75,7 +76,7 @@ int
 Journal::format(const NamespaceInfo& nsInfo) {
     if(nsInfo.getNamespaceID() == 0) {
         LOG.error("can't format with uninitialized namespace info");
-        return -1;
+        abort();
     }
     LOG.info("Formatting journal with namespace info");
     int rc = storage.format(nsInfo);
@@ -167,7 +168,7 @@ Journal::checkRequest(const RequestInfo& reqInfo) {
       if (reqInfo.getCommittedTxId() < cti) {
           LOG.error("Client trying to move committed txid backward from %d to ",
                   cti, reqInfo.getCommittedTxId());
-          return -1;
+          abort();
       }
 
       return committedTxnId->set(reqInfo.getCommittedTxId());
@@ -258,6 +259,7 @@ Journal::finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId,
         if(endTxId != elf.getLastTxId()) {
             LOG.error("Trying to re-finalize already finalized log [%d, %d] with different endTxId %d",
                     elf.getFirstTxId(), elf.getLastTxId(), endTxId);
+            abort();
         }
     }
 
@@ -345,8 +347,9 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
     }
     if (existing.isInitialized()) {
         if (!existing.isInProgress()) {
-            LOG.warn("Already have a finalized segment %s beginning at ",
+            LOG.error("Already have a finalized segment %s beginning at ",
               existing.getFile().c_str(), txid);
+            abort();
         }
 
         // If it's in-progress, it should only contain one transaction,
@@ -357,7 +360,7 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
         }
         if (existing.getLastTxId() != existing.getFirstTxId()) {
             LOG.error("The log file %s seems to contain valid transactions" , existing.getFile().c_str());
-            return -1;
+            abort();
         }
     }
 
@@ -510,7 +513,7 @@ Journal::prepareRecovery(
             LOG.error("prev accepted: [%d, %d] \n on disk: [%d, %d]",
                     acceptedState.starttxid(), acceptedState.endtxid(),
                     segInfo.starttxid(),segInfo.endtxid());
-            return -1;
+            abort();
         }
         ret.set_acceptedinepoch(previouslyAccepted.acceptedinepoch());
         ret.set_allocated_segmentstate(new hadoop::hdfs::SegmentStateProto(acceptedState));
@@ -558,12 +561,12 @@ Journal::getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecovery
     in.close();
     if ( !parseSuccess) {
        LOG.error("parsing persisted paxos data for segment %d is unsuccessful", segmentTxId);
-       return -1;
+       abort();
     }
 
     if (tempPaxosData.segmentstate().starttxid() != segmentTxId) {
        LOG.error("Bad persisted data for segment %d : %d ", segmentTxId, tempPaxosData.segmentstate().starttxid());
-       return -1;
+       abort();
     }
     ret = tempPaxosData;
     isInitialized = true;
@@ -712,7 +715,7 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
     // at least one transaction.
     if (segment.endtxid()<=0 || segment.endtxid() < segmentTxId) {
         LOG.error("bad recovery state for segment %d: [%d, %d]", segmentTxId, segment.starttxid(), segment.endtxid());
-        return -1;
+        abort();
     }
     bool isOldDataInitialized = false;
     hadoop::hdfs::PersistedRecoveryPaxosData oldData;
@@ -728,7 +731,7 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
     if (isOldDataInitialized) {
         if(oldData.acceptedinepoch() > reqInfo.getEpoch()) {
             LOG.error("Bad paxos transition, out-of-order epochs.");
-            return -1;
+            abort();
         }
     }
 
@@ -763,12 +766,12 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
         //Might have to revisit this decision in case it is used many times
         if(!currentSegment.has_endtxid()) {
             LOG.error("invalid segment: [%d, %d]", currentSegment.starttxid(), currentSegment.endtxid());
-            return -1;
+            abort();
         }
 
         if(!segment.has_endtxid()) {
             LOG.error("invalid segment: [%d, %d]", segment.starttxid(), segment.endtxid());
-            return -1;
+            abort();
         }
 
         if( (cti >= currentSegment.starttxid() && cti <= currentSegment.endtxid()) &&
@@ -777,14 +780,14 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
                     currentSegment.starttxid(), currentSegment.endtxid(),
                     segment.starttxid(), segment.endtxid(),
                     cti);
-            return -1;
+            abort();
         }
 
         // Another paranoid check: we should not be asked to synchronize a log
         // on top of a finalized segment.
         if(!currentSegment.isinprogress()){
             LOG.error("Should never be asked to synchronize a different log on top of an already-finalized segment");
-            return -1;
+            abort();
         }
 
         // If we're shortening the log, update our highest txid
