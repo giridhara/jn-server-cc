@@ -42,4 +42,13 @@ JNClientOutputStream::flush(){
     return !stream.fail();
 }
 
+bool
+JNClientOutputStream::create(int layoutVersion) {
+    stream.seekp(0);
+    // write header - layout version , followed by layout flags
+    stream << layoutVersion;
+    stream << 0;
+    return flush();
+}
+
 }

@@ -61,6 +61,8 @@ namespace JournalServiceServer
 
       void close();
 
+      bool create(int layoutVersion);
+
       int writeRaw(const char* records);
       bool flush();
 

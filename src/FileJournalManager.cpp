@@ -62,6 +62,10 @@ FileJournalManager::startLogSegment(long txid, int layoutVersion, scoped_ptr<JNC
     currentInProgress = getInProgressEditsFile(jnStorage.getCurrentDir(), txid);
     ret.reset(new JNClientOutputStream(currentInProgress));
 
+    if(!ret->create(layoutVersion)) {
+        return -1;
+    }
+
     return 0;
 }
 
