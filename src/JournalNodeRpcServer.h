@@ -13,7 +13,7 @@
 #include "JournalNode.h"
 
 //forward declaration
-
+class JournalNode;
 
 namespace JournalServiceServer
 {

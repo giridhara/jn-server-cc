@@ -12,6 +12,7 @@
 #include "../util/JournalNodeConfigKeys.h"
 #include "Journal.h"
 #include <map>
+#include <boost/scoped_ptr.hpp>
 
 using std::map;
 
@@ -47,9 +48,18 @@ private:
     string httpServerURI;
     string localDir;
     unsigned int port;
+
+
 };
+
+extern scoped_ptr<JournalNode> global_jn;
 
 }
 
 
 #endif /* JOURNALNODE_H_ */
+
+
+//int main(){
+//
+//}

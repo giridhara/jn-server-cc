@@ -10,6 +10,8 @@
 namespace JournalServiceServer
 {
 
+scoped_ptr<JournalNode> global_jn;
+
 //int
 //JournalNode::getLogDir(const string& jid, string& logDir) {
 //    string dir;

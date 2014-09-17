@@ -103,6 +103,13 @@ public:
     bool isFormatted() {
         return storage.isFormatted();
     }
+    JNStorage& getStorage() {
+        return storage;
+    }
+
+    FileJournalManager& getFileJournalManager(){
+        return fjm;
+    }
 
 private:
     void refreshCachedData();
