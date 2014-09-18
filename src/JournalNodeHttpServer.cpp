@@ -8,6 +8,7 @@
 #include "JournalNodeHttpServer.h"
 #include "../util/Logger.h"
 #include <sstream>
+#include <signal.h>
 
 namespace JournalServiceServer
 {
@@ -23,7 +24,11 @@ JournalNodeHttpServer::~JournalNodeHttpServer()
     // TODO Auto-generated destructor stub
 }
 
-int checkStorageInfo(JNStorage& storage, char* storageInfo) {
+static void signal_handler(int sig_num) {
+  JournalNodeHttpServer::signal_received = sig_num;
+}
+
+static int checkStorageInfo(JNStorage& storage, char* storageInfo) {
     int myNsId = storage.getNamespaceID();
     string myClusterId = storage.getClusterID();
     char *tok = 0;
@@ -87,7 +92,8 @@ static void send_reply(struct mg_connection *conn) {
   }
 }
 
-static int ev_handler(struct mg_connection *conn, enum mg_event ev) {
+static int
+ev_handler(struct mg_connection *conn, enum mg_event ev) {
     if (ev == MG_AUTH) {
         return MG_TRUE;   // Authorize all requests
     }else if (ev == MG_REQUEST && !strcmp(conn->uri, "/getJournal")) {
@@ -98,15 +104,26 @@ static int ev_handler(struct mg_connection *conn, enum mg_event ev) {
     }
 }
 
-//int main(void) {
-//  struct mg_server *server = mg_create_server(NULL, ev_handler);
-//  mg_set_option(server, "listening_port", "8080");
-//
-//  printf("Starting on port %s\n", mg_get_option(server, "listening_port"));
-//  for (;;) mg_poll_server(server, 1000);
-//  mg_destroy_server(&server);
-//
-//  return 0;
-//}
+static void* run_httpserver(void* arg) {
+    signal(SIGTERM, signal_handler);
+    signal(SIGINT, signal_handler);
+    struct mg_server *server = mg_create_server(NULL, ev_handler);
+    mg_set_option(server, "listening_port", JournalNodeHttpServer::listening_port.c_str());
+
+    LOG.info("Starting http server on port %s ", mg_get_option(server, "listening_port"));
+    while(JournalNodeHttpServer::signal_received == 0) {
+        mg_poll_server(server, 1000);
+    }
+    mg_destroy_server(&server);
+}
+
+static int start_httpserver(string port) {
+  JournalNodeHttpServer::signal_received = 0;
+  JournalNodeHttpServer::listening_port = port;
+  pthread_t thread;
+  pthread_create(&thread, 0, &run_httpserver, 0);
+
+  return 0;
+}
 
 } /* namespace JournalServiceServer */

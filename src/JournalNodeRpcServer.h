@@ -11,21 +11,23 @@
 #include "QjournalProtocol.h"
 #include "Journal.h"
 #include "JournalNode.h"
+#include <Ice/Properties.h>
+#include <Ice/Ice.h>
 
 //forward declaration
 class JournalNode;
 
 namespace JournalServiceServer
 {
-
 //const ObjectPtr instance, const string& protocol, const string bind_address, int port, int num_handlers
 
 class JournalNodeRpcServer : public QJournalProtocol
 {
 public:
-    JournalNodeRpcServer(JournalNode& jn)
+    JournalNodeRpcServer(Ice::PropertiesPtr conf, JournalNode& jn )
         :
-        jn(jn)
+        jn(jn),
+        conf(conf)
     {}
     ~JournalNodeRpcServer() {}
     int isFormatted(const string& journalId, bool& result);
@@ -48,6 +50,7 @@ public:
 
 private:
     JournalNode& jn;
+    Ice::PropertiesPtr conf;
 };
 
 } /* namespace JournalServiceServer */

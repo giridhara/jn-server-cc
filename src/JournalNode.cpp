@@ -45,4 +45,35 @@ scoped_ptr<JournalNode> global_jn;
 //    return 0;
 //  }
 
+void
+JournalNode::start() {
+    validateAndCreateJournalDir(localDir);
+
+    ostringstream ostr;
+    ostr << httpPort;
+
+    JournalNodeHttpServer::start_httpserver(ostr.str());
+
+    rpcServer = new JournalNodeRpcServer(conf, this);
+    rpcServer.start();
+}
+
+
+}
+
+
+int main(int argc, char** argv){
+    char* progname = "journalnode";
+    if(argc !=2) {
+        cerr << "Usage: " << progname <<
+                       "  <properties file> \n";
+                   return 0;
+    }
+
+    Ice::PropertiesPtr properties = Ice::createProperties();
+    properties->load(argv[1]);
+
+    (JournalServiceServer::global_jn).reset(new JournalServiceServer::JournalNode(properties));
+
+
 }

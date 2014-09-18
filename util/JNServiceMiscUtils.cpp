@@ -18,9 +18,27 @@
 #include "JNServiceMiscUtils.h"
 
 #include <stdlib.h>
-namespace hadoop
+
+namespace JournalServiceServer
 {
-namespace JournalServiceClient
-{
+HostPortPair::HostPortPair(string name)
+  {
+    size_t host_pos = name.find_first_of(":");
+    hostname = name.substr(0, host_pos);
+    port = atoi(name.substr(host_pos + 1).c_str());
+  }
+
+bool HostPortPair::isValid(string name) {
+    size_t host_pos = name.find_first_of(":");
+    size_t length = name.size();
+    if (host_pos == string::npos || host_pos == 0 || host_pos == length)
+      return false;
+    for (size_t i = host_pos +1; i < length; i++)
+    {
+      if ( name[i] < '0' || name[i] > '9' )
+        return false;
+    }
+    return true;
+  }
 }
-}
+

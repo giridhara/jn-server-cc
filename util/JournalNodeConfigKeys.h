@@ -20,7 +20,7 @@ const string  DFS_JOURNALNODE_EDITS_DIR_KEY = "dfs.journalnode.edits.dir";
   const int     DFS_JOURNALNODE_HTTP_PORT_DEFAULT = 8480;
   const string  DFS_JOURNALNODE_HTTP_ADDRESS_DEFAULT = "0.0.0.0:" + DFS_JOURNALNODE_HTTP_PORT_DEFAULT;
   const string  DFS_JOURNALNODE_HTTPS_ADDRESS_KEY = "dfs.journalnode.https-address";
-  const int     DFS_JOURNALNODE_HTTPS_PORT_DEFAULT = 8481;
+  const int     DFS_JOURNALNODE_HTTPS_PORT_DEFAULT = 8480;
   const string  DFS_JOURNALNODE_HTTPS_ADDRESS_DEFAULT = "0.0.0.0:" + DFS_JOURNALNODE_HTTPS_PORT_DEFAULT;
 
   const string  DFS_JOURNALNODE_KEYTAB_FILE_KEY = "dfs.journalnode.keytab.file";

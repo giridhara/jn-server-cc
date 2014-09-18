@@ -85,6 +85,15 @@ const int file_delete(const string& name) {
     return remove(name.c_str());
 }
 
+struct HostPortPair
+  {
+    string hostname;
+    int port;
+    HostPortPair(string name);
+
+    static bool isValid(string name);
+  };
+
 }
 
 #endif //UTIL_JNSERVICE_MISC_UTILS

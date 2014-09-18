@@ -99,14 +99,30 @@ JournalNodeRpcServer::finalizeLogSegment(const RequestInfo& reqInfo,
 int
 JournalNodeRpcServer::getEditLogManifest(const string& jid, const long sinceTxId,
           const bool inProgressOk, hadoop::hdfs::GetEditLogManifestResponseProto& ret){
-//    RemoteEditLogManifest manifest = jn.getOrCreateJournal(jid)
-//            .getEditLogManifest(sinceTxId, inProgressOk);
-//
-//    return GetEditLogManifestResponseProto.newBuilder()
-//        .setManifest(PBHelper.convert(manifest))
-//        .setHttpPort(jn.getBoundHttpAddress().getPort())
-//        .setFromURL(jn.getHttpServerURI())
-//        .build();
+    Journal* journal = 0;
+    int rc = jn.getOrCreateJournal(jid, journal);
+    if(rc != 0) {
+        return -1;
+    }
+
+    vector<EditLogFile> elfv;
+    if(journal->getEditLogManifest(sinceTxId, inProgressOk, elfv) != 0) {
+        return -1;
+    }
+
+    hadoop::hdfs::RemoteEditLogManifestProto* relmp = new hadoop::hdfs::RemoteEditLogManifestProto();
+
+    for(std::vector<EditLogFile>::iterator it = elfv.begin(); it != elfv.end(); ++it) {
+        hadoop::hdfs::RemoteEditLogProto* relp = new hadoop::hdfs::RemoteEditLogProto();
+        relp->set_starttxid(it->getFirstTxId());
+        relp->set_endtxid(it->getLastTxId());
+        relp->set_isinprogress(it->isInProgress());
+        relmp->mutable_logs()->AddAllocated(relp);
+     }
+
+    ret.set_allocated_manifest(relmp);
+    ret.set_httpport(jn.getPort());
+    ret.set_fromurl(jn.getHttpServerURI());
     return 0;
 }
 

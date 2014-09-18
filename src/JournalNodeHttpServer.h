@@ -26,6 +26,12 @@ class JournalNodeHttpServer
 public:
     JournalNodeHttpServer();
     virtual ~JournalNodeHttpServer();
+
+    static string listening_port;
+    static volatile int signal_received;
+
+    static int start_httpserver(string port);
+    static void* run_httpserver(void* arg);
 };
 
 } /* namespace JournalServiceServer */

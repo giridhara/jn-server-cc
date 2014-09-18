@@ -13,6 +13,8 @@
 #include "Journal.h"
 #include <map>
 #include <boost/scoped_ptr.hpp>
+#include <Ice/Properties.h>
+#include <Ice/Ice.h>
 
 using std::map;
 
@@ -24,38 +26,52 @@ class JournalNodeRpcServer;
 class JournalNode
 {
 public:
-    JournalNode()
+    JournalNode(Ice::PropertiesPtr conf)
     :
- //       journalsById(),
- //       conf(0),
+        journalsById(),
+        conf(conf),
         rpcServer(0)
-    {}
+    {
+        string editsDir = conf->getProperty(DFS_JOURNALNODE_EDITS_DIR_KEY);
+        if(editsDir.empty()){
+            localDir = DFS_JOURNALNODE_EDITS_DIR_DEFAULT;
+        }else {
+            localDir =  editsDir;
+        }
+        string httpsAddrString = conf->getProperty(DFS_JOURNALNODE_HTTPS_ADDRESS_KEY);
+        if(httpsAddrString.empty()){
+            httpServerURI = DFS_JOURNALNODE_HTTPS_ADDRESS_DEFAULT;
+        }else{
+            httpServerURI = httpsAddrString;
+        }
+
+        HostPortPair hpp(httpServerURI);
+        httpPort = hpp.port;
+    }
     virtual ~JournalNode();
     string getHttpServerURI() {
        return httpServerURI;
     }
     unsigned int getPort(){
-        return port;
+        return httpPort;
     }
+    void start();
+
     int getOrCreateJournal(const string& jid, Journal* journal);
 private:
     int getLogDir(const string& jid, string& logDir);
 
-//    map<string, string> conf;
+    Ice::PropertiesPtr conf;
     JournalNodeRpcServer* rpcServer;
-//    JournalNodeHttpServer httpServer;
-//    map<const string, Journal*> journalsById;
+    map<const string, Journal*> journalsById;
     string httpServerURI;
     string localDir;
-    unsigned int port;
-
-
+    unsigned int httpPort;
 };
 
 extern scoped_ptr<JournalNode> global_jn;
 
 }
-
 
 #endif /* JOURNALNODE_H_ */
 
