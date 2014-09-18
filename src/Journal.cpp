@@ -8,6 +8,10 @@
 #include "Journal.h"
 #include "../util/JNServiceMiscUtils.h"
 #include <stdlib.h>
+#include <curlpp/cURLpp.hpp>
+#include <curlpp/Easy.hpp>
+#include <curlpp/Options.hpp>
+#include <fstream>
 
 namespace JournalServiceServer
 {
@@ -852,28 +856,27 @@ Journal::syncLog(const RequestInfo& reqInfo,
       const hadoop::hdfs::SegmentStateProto& segment, const string& url, string &ret) {
     string tmpFile = storage.getSyncLogTemporaryFile(
         segment.starttxid(), reqInfo.getEpoch());
-    return 0;
-//    final List<File> localPaths = ImmutableList.of(tmpFile);
-//
-//    LOG.info("Synchronizing log from %s", url);
-//
-//    bool success = false;
-//    try {
-//      TransferFsImage.doGetUrl(url, localPaths, storage, true);
-//      assert tmpFile.exists();
-//      success = true;
-//    } finally {
-//      if (!success) {
-//        if (!tmpFile.delete()) {
-//          LOG.warn("Failed to delete temporary file " + tmpFile);
-//        }
-//      }
-//    }
-//    return null;
-//
-//
-//    return tmpFile;
 
-  }
+    ofstream os(tmpFile.c_str());
+    bool success= false;
+    try{
+        curlpp::Easy myRequest;
+        curlpp::options::WriteStream ws(&os);
+        myRequest.setOpt(new curlpp::options::Url(url));
+        myRequest.setOpt(ws);
+        myRequest.perform();
+        os.close();
+        success = true;
+    }catch(...){
+        os.close();
+        if(!success){
+            LOG.warn("unable to download file %s from url %s", tmpFile.c_str(), url.c_str());
+            file_delete(tmpFile);
+            return -1;
+        }
+    }
+    ret = tmpFile;
+    return 0;
+}
 
 } /* namespace JournalServiceServer */
