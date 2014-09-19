@@ -27,7 +27,7 @@ namespace JournalServiceServer
   Logger LOG;
 
   Logger::Logger():
-    mLevel(LOG_WARN),
+    mLevel(LOG_DEBUG),
     mBufMsgCountMax(10),
     mCurBufMsgCount(0)
   {
@@ -111,7 +111,7 @@ namespace JournalServiceServer
       vfprintf(mFstrm, formatString.c_str(), args);
       fprintf(mFstrm,"\n");
       mCurBufMsgCount++;
-      if (level == LOG_ERROR || mCurBufMsgCount > mBufMsgCountMax)
+      if (level == LOG_ERROR || level == LOG_WARN || level == LOG_INFO || level == LOG_DEBUG || mCurBufMsgCount > mBufMsgCountMax)
       {
         fflush(mFstrm);
         mCurBufMsgCount=0;

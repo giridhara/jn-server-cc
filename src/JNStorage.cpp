@@ -7,6 +7,7 @@
 
 #include "JNStorage.h"
 #include "util/Logger.h"
+#include "util/JNServiceMiscUtils.h"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ JNStorage::writeProperties(string to) {
     ofstream versionStream(to.c_str());
     if(!versionStream.is_open())
       return -1;
-    versionStream << propstream;
+    versionStream << propstream.str();
     versionStream.close();
 
     return 0;
@@ -73,7 +74,7 @@ JNStorage::format(const NamespaceInfo& nsInfo) {
     // TODO :As part of analyze storage , once the storagestate is normal , they are reading back again properties from VERSION file
     // To me it looks redundant. Hence skipping analyzeStorage for now
     // Will revisit this decision
-    //    analyzeStorage();
+    analyzeStorage();
     return 0;
 }
 
@@ -116,7 +117,6 @@ JNStorage::analyzeStorage() {
 //      if (!root.mkdirs())
 //        throw new IOException("Cannot create directory " + rootPath);
     }
-    return 0;
     // or is inaccessible
 //    if (!root.isDirectory()) {
 //      LOG.warn(rootPath + "is not a directory");
@@ -133,33 +133,17 @@ JNStorage::analyzeStorage() {
 
 //    this.lock(); // lock storage if it exists
 //
-//    if (startOpt == HdfsServerConstants.StartupOption.FORMAT)
-//    return StorageState.NOT_FORMATTED;
-//
-//    if (startOpt != HdfsServerConstants.StartupOption.IMPORT) {
-//    storage.checkOldLayoutStorage(this);
-//    }
-//
-//    // check whether current directory is valid
-//    File versionFile = getVersionFile();
-//    boolean hasCurrent = versionFile.exists();
-//
-//    // check which directories exist
-//    boolean hasPrevious = getPreviousDir().exists();
-//    boolean hasPreviousTmp = getPreviousTmp().exists();
-//    boolean hasRemovedTmp = getRemovedTmp().exists();
-//    boolean hasFinalizedTmp = getFinalizedTmp().exists();
-//    boolean hasCheckpointTmp = getLastCheckpointTmp().exists();
-//
-//    if (!(hasPreviousTmp || hasRemovedTmp
-//      || hasFinalizedTmp || hasCheckpointTmp)) {
-//    // no temp dirs - no recovery
-//    if (hasCurrent)
-//      return StorageState.NORMAL;
-//    if (hasPrevious)
-//      throw new InconsistentFSStateException(root,
-//                          "version file in current directory is missing.");
-//    return StorageState.NOT_FORMATTED;
+    // check whether current directory is valid
+    string versionFile = getVersionFile();
+    bool hasCurrent = file_exists(versionFile);
+
+    if (hasCurrent) {
+        state = NORMAL;
+        return 0;
+    }
+
+    state = NOT_FORMATTED;
+    return 0;
 //    }
 //
 //    if ((hasPreviousTmp?1:0) + (hasRemovedTmp?1:0)
