@@ -30,6 +30,10 @@ JNClientOutputStream::close(){
     stream.close();
 }
 
+void JNClientOutputStream::abort(){
+    stream.close();
+}
+
 int
 JNClientOutputStream::writeRaw(const char* records) {
       stream << records;

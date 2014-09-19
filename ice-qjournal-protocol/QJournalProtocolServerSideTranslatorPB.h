@@ -63,7 +63,7 @@ public:
     virtual hadoop::hdfs::AcceptRecoveryResponseProto acceptRecovery(const hadoop::hdfs::AcceptRecoveryRequestProto&, const ::Ice::Current& current);
 
 private:
-    void throwExceptionOnError(CallStatus& cs) const;
+    void throwExceptionOnError(int rc) const;
     QJournalProtocol* impl;
 };
 
