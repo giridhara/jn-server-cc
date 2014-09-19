@@ -15,8 +15,6 @@
 using namespace Ice;
 using namespace std;
 
-namespace hadoop
-{
 namespace icerpc
 {
 
@@ -51,6 +49,5 @@ private:
 };
 
 } /* namespace icerpc */
-} /* namespace hadoop */
 
 #endif /* SERVER_H_ */

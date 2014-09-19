@@ -10,6 +10,11 @@
 namespace JournalServiceServer
 {
 
+void
+JournalNodeRpcServer::start() {
+    server->start();
+}
+
 int
 JournalNodeRpcServer::isFormatted(const string& journalId, bool& result){
     Journal* journal = 0;

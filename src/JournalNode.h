@@ -9,14 +9,18 @@
 #define JOURNALNODE_H_
 
 #include "JournalNodeRpcServer.h"
+#include "JournalNodeHttpServer.h"
 #include "../util/JournalNodeConfigKeys.h"
+#include "../util/JNServiceMiscUtils.h"
 #include "Journal.h"
 #include <map>
 #include <boost/scoped_ptr.hpp>
 #include <Ice/Properties.h>
 #include <Ice/Ice.h>
+#include <string>
 
 using std::map;
+using std::string;
 
 namespace JournalServiceServer
 {
@@ -48,7 +52,7 @@ public:
         HostPortPair hpp(httpServerURI);
         httpPort = hpp.port;
     }
-    virtual ~JournalNode();
+    virtual ~JournalNode() {}
     string getHttpServerURI() {
        return httpServerURI;
     }

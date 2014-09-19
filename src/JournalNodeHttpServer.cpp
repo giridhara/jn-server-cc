@@ -13,6 +13,9 @@
 namespace JournalServiceServer
 {
 
+string JournalNodeHttpServer::listening_port = "";
+volatile int JournalNodeHttpServer::signal_received = 0;
+
 JournalNodeHttpServer::JournalNodeHttpServer()
 {
     // TODO Auto-generated constructor stub
@@ -24,8 +27,8 @@ JournalNodeHttpServer::~JournalNodeHttpServer()
     // TODO Auto-generated destructor stub
 }
 
-static void signal_handler(int sig_num) {
-  JournalNodeHttpServer::signal_received = sig_num;
+void JournalNodeHttpServer::signal_handler(int sig_num) {
+  signal_received = sig_num;
 }
 
 static int checkStorageInfo(JNStorage& storage, char* storageInfo) {
@@ -104,22 +107,22 @@ ev_handler(struct mg_connection *conn, enum mg_event ev) {
     }
 }
 
-static void* run_httpserver(void* arg) {
+void* JournalNodeHttpServer::run_httpserver(void* arg) {
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
     struct mg_server *server = mg_create_server(NULL, ev_handler);
-    mg_set_option(server, "listening_port", JournalNodeHttpServer::listening_port.c_str());
+    mg_set_option(server, "listening_port", listening_port.c_str());
 
     LOG.info("Starting http server on port %s ", mg_get_option(server, "listening_port"));
-    while(JournalNodeHttpServer::signal_received == 0) {
+    while(signal_received == 0) {
         mg_poll_server(server, 1000);
     }
     mg_destroy_server(&server);
 }
 
-static int start_httpserver(string port) {
-  JournalNodeHttpServer::signal_received = 0;
-  JournalNodeHttpServer::listening_port = port;
+int
+JournalNodeHttpServer::start_httpserver(string port) {
+  listening_port = port;
   pthread_t thread;
   pthread_create(&thread, 0, &run_httpserver, 0);
 

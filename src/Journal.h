@@ -20,6 +20,8 @@
 #include <boost/scoped_ptr.hpp>
 #include "../util/Logger.h"
 #include "../ice-qjournal-protocol/QJournalProtocolPB.h"
+#include <Ice/Ice.h>
+#include <ice-rpc-cc/src/Server.h>
 
 //#include <fstream>
 
@@ -38,7 +40,7 @@ class Journal
 {
 public:
     Journal();
-    Journal(string conf, string logDir, string jid)
+    Journal(Ice::PropertiesPtr conf, string logDir, string jid)
         :
           journalId(jid),
           storage(logDir),
@@ -49,7 +51,9 @@ public:
           lastPromisedEpoch(),
           lastWriterEpoch(),
           committedTxnId(),
-          fjm(storage)
+          fjm(storage),
+          conf(conf)
+
     {
         curSegment.reset(0);
         lastPromisedEpoch.reset(0);
@@ -208,6 +212,7 @@ private:
     boost::scoped_ptr<BestEffortLongFile> committedTxnId;
 
     FileJournalManager fjm;
+    Ice::PropertiesPtr conf;
 };
 
 } /* namespace JournalServiceServer */

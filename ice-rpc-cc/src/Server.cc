@@ -16,8 +16,6 @@
 #include "/home/psarda/workspace/jn-server-cc/ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h"
 #include "/home/psarda/workspace/jn-server-cc/src/JournalNodeRpcServer.h"
 
-namespace hadoop
-{
 namespace icerpc
 {
 const string Server::server_config = "/tmp/config.server";
@@ -104,12 +102,11 @@ Server::run(int argc, char*[]){
 }
 
 } /* namespace icerpc */
-} /* namespace hadoop */
 
-int main(int argc, char *argv[]){
-    JournalServiceServer::QJournalProtocol* qjp= new JournalServiceServer::JournalNodeRpcServer();
-    QJournalProtocolProtos::QJournalProtocolPBPtr instance = new JournalServiceServer::QJournalProtocolServerSideTranslatorPB(qjp);
-    hadoop::icerpc::Server server(instance, "QJournalProtocolPB", "localhost", 10000, 1);
-    server.start();
-    return 0;
-}
+//int main(int argc, char *argv[]){
+//    JournalServiceServer::QJournalProtocol* qjp= new JournalServiceServer::JournalNodeRpcServer();
+//    QJournalProtocolProtos::QJournalProtocolPBPtr instance = new JournalServiceServer::QJournalProtocolServerSideTranslatorPB(qjp);
+//    icerpc::Server server(instance, "QJournalProtocolPB", "localhost", 10000, 1);
+//    server.start();
+//    return 0;
+//}

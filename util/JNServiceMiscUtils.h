@@ -38,52 +38,21 @@ namespace JournalServiceServer
 {
   const bool IS_LITTLE_ENDIAN = (1 == *(unsigned char *)&(const int){1});
 
-string getNameNodeFileName(const string filenamePrefix, long txid) {
-     ostringstream strm;
-     strm << filenamePrefix;
-     strm  << setfill('0') << setw(19) << txid;
-    return strm.str();
-}
+string getNameNodeFileName(const string filenamePrefix, long txid);
 
-string getInProgressEditsFileName(long startTxId) {
-    return getNameNodeFileName(EDITS_INPROGRESS, startTxId);
-}
+string getInProgressEditsFileName(long startTxId);
+string getInProgressEditsFile(string currentDir, long startTxId);
 
-string getInProgressEditsFile(string currentDir, long startTxId) {
-    return string(currentDir + "/" + getInProgressEditsFileName(startTxId));
-}
-
-string getFinalizedEditsFileName(long startTxId, long endTxId) {
-    ostringstream strm;
-    strm << EDITS << "_";
-    strm << setfill('0') << setw(19) << startTxId;
-    strm << "-";
-    strm << setfill('0') << setw(19) << endTxId;
-    return strm.str();
-  }
+string getFinalizedEditsFileName(long startTxId, long endTxId);
 
 string getFinalizedEditsFile(string currentDir,
-    long startTxId, long endTxId) {
-    return string(currentDir + "/" +
-        getFinalizedEditsFileName(startTxId, endTxId));
-}
+    long startTxId, long endTxId);
 
-const bool file_exists(const string& name) {
-    ifstream ifs (name.c_str());
-    if(!ifs.is_open()) {
-        return false;
-    }
-    ifs.close();
-    return true;
-}
+const bool file_exists(const string& name);
 
-const int file_rename(const string& from, const string& to ) {
-    return rename(from.c_str(), to.c_str());
-}
+const int file_rename(const string& from, const string& to );
 
-const int file_delete(const string& name) {
-    return remove(name.c_str());
-}
+const int file_delete(const string& name);
 
 struct HostPortPair
   {

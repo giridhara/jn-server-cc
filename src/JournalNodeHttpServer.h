@@ -32,6 +32,7 @@ public:
 
     static int start_httpserver(string port);
     static void* run_httpserver(void* arg);
+    static void signal_handler(int sig_num);
 };
 
 } /* namespace JournalServiceServer */

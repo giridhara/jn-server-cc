@@ -40,5 +40,52 @@ bool HostPortPair::isValid(string name) {
     }
     return true;
   }
+
+string getNameNodeFileName(const string filenamePrefix, long txid) {
+     ostringstream strm;
+     strm << filenamePrefix;
+     strm  << setfill('0') << setw(19) << txid;
+    return strm.str();
+}
+
+string getInProgressEditsFileName(long startTxId) {
+    return getNameNodeFileName(EDITS_INPROGRESS, startTxId);
+}
+
+string getInProgressEditsFile(string currentDir, long startTxId) {
+    return string(currentDir + "/" + getInProgressEditsFileName(startTxId));
+}
+
+string getFinalizedEditsFileName(long startTxId, long endTxId) {
+    ostringstream strm;
+    strm << EDITS << "_";
+    strm << setfill('0') << setw(19) << startTxId;
+    strm << "-";
+    strm << setfill('0') << setw(19) << endTxId;
+    return strm.str();
+  }
+
+string getFinalizedEditsFile(string currentDir,
+    long startTxId, long endTxId) {
+    return string(currentDir + "/" +
+        getFinalizedEditsFileName(startTxId, endTxId));
+}
+
+const bool file_exists(const string& name) {
+    ifstream ifs (name.c_str());
+    if(!ifs.is_open()) {
+        return false;
+    }
+    ifs.close();
+    return true;
+}
+
+const int file_rename(const string& from, const string& to ) {
+    return rename(from.c_str(), to.c_str());
+}
+
+const int file_delete(const string& name) {
+    return remove(name.c_str());
+}
 }
 

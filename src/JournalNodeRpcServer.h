@@ -13,13 +13,16 @@
 #include "JournalNode.h"
 #include <Ice/Properties.h>
 #include <Ice/Ice.h>
+#include <ice-rpc-cc/src/Server.h>
+#include <ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h>
 
 //forward declaration
-class JournalNode;
+
 
 namespace JournalServiceServer
 {
-//const ObjectPtr instance, const string& protocol, const string bind_address, int port, int num_handlers
+
+class JournalNode;
 
 class JournalNodeRpcServer : public QJournalProtocol
 {
@@ -28,8 +31,16 @@ public:
         :
         jn(jn),
         conf(conf)
-    {}
+    {
+        QJournalProtocolProtos::QJournalProtocolPBPtr instance =
+                new JournalServiceServer::QJournalProtocolServerSideTranslatorPB(this);
+
+        //TODO :: Giving default values for now for hostname and port address of rpc server
+        server = new icerpc::Server(instance, "QjournalProtocolPB", "localhost", 8485, 1);
+    }
+
     ~JournalNodeRpcServer() {}
+    void start();
     int isFormatted(const string& journalId, bool& result);
     int getJournalState(const string& journalId, hadoop::hdfs::GetJournalStateResponseProto&);
     int newEpoch(const string& journalId, NamespaceInfo& nsInfo,
@@ -49,8 +60,10 @@ public:
           const hadoop::hdfs::SegmentStateProto& stateToAccept, const string& fromUrl);
 
 private:
-    JournalNode& jn;
+    JournalNode&  jn;
     Ice::PropertiesPtr conf;
+    icerpc::Server* server;
+
 };
 
 } /* namespace JournalServiceServer */

@@ -8,8 +8,10 @@
 #ifndef JOURNALNODECONFIGKEYS_H_
 #define JOURNALNODECONFIGKEYS_H_
 
+#include<string>
 
 namespace JournalServiceServer{
+using std::string;
 const string  DFS_JOURNALNODE_EDITS_DIR_KEY = "dfs.journalnode.edits.dir";
   const string  DFS_JOURNALNODE_EDITS_DIR_DEFAULT = "/tmp/hadoop/dfs/journalnode/";
   const string  DFS_JOURNALNODE_RPC_ADDRESS_KEY = "dfs.journalnode.rpc-address";
