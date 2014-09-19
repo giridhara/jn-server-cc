@@ -30,8 +30,9 @@ JNClientOutputStream::close(){
     stream.close();
 }
 
-void JNClientOutputStream::abort(){
+int JNClientOutputStream::abort(){
     stream.close();
+    return 0;
 }
 
 int

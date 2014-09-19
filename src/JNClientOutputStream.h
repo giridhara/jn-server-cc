@@ -53,7 +53,7 @@ namespace JournalServiceServer
      * Close the stream without necessarily flushing any pending data.
      * This may be called after a previous write or close threw an exception.
      */
-      void abort();
+      int abort();
 
       string getFileName() {
           return filename;
