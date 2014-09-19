@@ -36,7 +36,7 @@ public:
                 new JournalServiceServer::QJournalProtocolServerSideTranslatorPB(this);
 
         //TODO :: Giving default values for now for hostname and port address of rpc server
-        server = new icerpc::Server(instance, "QjournalProtocolPB", "localhost", 8485, 1);
+        server = new icerpc::Server(instance, "QJournalProtocolPB", "localhost", 8485, 1);
     }
 
     ~JournalNodeRpcServer() {}
