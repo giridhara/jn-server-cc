@@ -61,7 +61,7 @@ public:
     }
     void start();
 
-    int getOrCreateJournal(const string& jid, Journal* journal);
+    int getOrCreateJournal(const string& jid, Journal*& journal);
 private:
     int getLogDir(const string& jid, string& logDir);
 

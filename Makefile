@@ -1,7 +1,6 @@
 ifndef VERBOSE
 MAKEFLAGS += --no-print-directory
 endif
-VERSION=$(shell cat jn.spec | grep '^Version:' | cut -f2)
 RELEASE=$(shell date +%s)
 
 all: debug

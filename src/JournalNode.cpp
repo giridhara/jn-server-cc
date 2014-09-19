@@ -28,7 +28,7 @@ JournalNode::getLogDir(const string& jid, string& logDir) {
 }
 
 int
-JournalNode::getOrCreateJournal(const string& jid, Journal* journal) {
+JournalNode::getOrCreateJournal(const string& jid, Journal*& journal) {
     map<string, Journal*>::const_iterator pos = journalsById.find(jid);
     if (pos == journalsById.end()) {
         string logDir;
