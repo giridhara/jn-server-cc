@@ -1,7 +1,7 @@
 #ifndef QJOURNALPROTOCOL_H_
 #define QJOURNALPROTOCOL_H_
 
-#include "../ice-qjournal-protocol/QJournalProtocolPB.h"
+#include <QJournalProtocolPB.h>
 #include "../util/RequestInfo.h"
 #include "../util/NamespaceInfo.h"
 #include "../common/commons.h"

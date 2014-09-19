@@ -34,10 +34,7 @@ public:
         logDir(logDir),
         currentDir(logDir + "/" + "current")
     {
-//        ostringstream strm;
-//        strm << logDir + "/" + "current";
-//        currentDir(strm.str());
-        state = NORMAL;
+        analyzeStorage();
     }
     virtual ~JNStorage() {}
 
@@ -136,6 +133,7 @@ private:
         res = ostr.str();
         return 0;
     }
+    int analyzeStorage();
 
     string logDir;
     string currentDir;

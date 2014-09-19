@@ -24,7 +24,7 @@
 #ifndef ICE_UTIL_NAMESPACEINFO
 #define ICE_UTIL_NAMESPACEINFO
 
-#include "../ice-qjournal-protocol/QJournalProtocolPB.h"
+#include <QJournalProtocolPB.h>
 #include "StorageInfo.h"
 
 #include <stdint.h>

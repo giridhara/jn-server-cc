@@ -9,7 +9,7 @@
 #define STORAGEINFO_H_
 
 
-#include "../ice-qjournal-protocol/QJournalProtocolPB.h"
+#include <QJournalProtocolPB.h>
 
 #include <stdint.h>
 #include <string>

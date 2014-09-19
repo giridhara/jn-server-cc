@@ -34,7 +34,7 @@ JournalNode::getOrCreateJournal(const string& jid, Journal*& journal) {
         string logDir;
         if(getLogDir(jid, logDir) != 0)
             return -1;
-        cout << "Initializing journal in directory " + logDir;
+        cout << "Initializing journal in directory " + logDir << endl;
         journal = new Journal(conf, logDir, jid);
         journalsById[jid] = journal;
     } else {

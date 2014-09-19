@@ -2,7 +2,7 @@
 #define ICE_UTIL_REQUESTINFO
 #include <string>
 
-#include "../ice-qjournal-protocol/QJournalProtocolPB.h"
+#include <QJournalProtocolPB.h>
 
 using std::string;
 

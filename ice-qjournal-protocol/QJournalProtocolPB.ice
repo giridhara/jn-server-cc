@@ -85,24 +85,24 @@ interface QJournalProtocolPB
   IsFormattedResponseProto isFormatted(IsFormattedRequestProto request) throws ServiceException;
 
   //  rpc discardSegments(DiscardSegmentsRequestProto) returns (DiscardSegmentsResponseProto);
-  DiscardSegmentsResponseProto discardSegments(DiscardSegmentsRequestProto request) throws ServiceException;
+//  DiscardSegmentsResponseProto discardSegments(DiscardSegmentsRequestProto request) throws ServiceException;
 
   //  rpc getJournalCTime(GetJournalCTimeRequestProto) returns (GetJournalCTimeResponseProto);
-  GetJournalCTimeResponseProto getJournalCTime(GetJournalCTimeRequestProto request) throws ServiceException;
+//  GetJournalCTimeResponseProto getJournalCTime(GetJournalCTimeRequestProto request) throws ServiceException;
 
   //  rpc doPreUpgrade(DoPreUpgradeRequestProto) returns (DoPreUpgradeResponseProto);
-  DoPreUpgradeResponseProto doPreUpgrade(DoPreUpgradeRequestProto request) throws ServiceException;
+//  DoPreUpgradeResponseProto doPreUpgrade(DoPreUpgradeRequestProto request) throws ServiceException;
   //  rpc doUpgrade(DoUpgradeRequestProto) returns (DoUpgradeResponseProto);
-  DoUpgradeResponseProto doUpgrade(DoUpgradeRequestProto request) throws ServiceException;
+//  DoUpgradeResponseProto doUpgrade(DoUpgradeRequestProto request) throws ServiceException;
 
   //  rpc doFinalize(DoFinalizeRequestProto) returns (DoFinalizeResponseProto);
-  DoFinalizeResponseProto doFinalize(DoFinalizeRequestProto request) throws ServiceException;
+//  DoFinalizeResponseProto doFinalize(DoFinalizeRequestProto request) throws ServiceException;
 
   //  rpc canRollBack(CanRollBackRequestProto) returns (CanRollBackResponseProto);
-  CanRollBackResponseProto canRollBack(CanRollBackRequestProto request) throws ServiceException;
+//  CanRollBackResponseProto canRollBack(CanRollBackRequestProto request) throws ServiceException;
 
   //  rpc doRollback(DoRollbackRequestProto) returns (DoRollbackResponseProto);
-  DoRollbackResponseProto doRollback(DoRollbackRequestProto request) throws ServiceException;
+//  DoRollbackResponseProto doRollback(DoRollbackRequestProto request) throws ServiceException;
 
   //  rpc getJournalState(GetJournalStateRequestProto) returns (GetJournalStateResponseProto);
    GetJournalStateResponseProto getJournalState(GetJournalStateRequestProto request) throws ServiceException;
@@ -117,7 +117,7 @@ interface QJournalProtocolPB
   JournalResponseProto journal(JournalRequestProto request) throws ServiceException;
 
   //  rpc heartbeat(HeartbeatRequestProto) returns (HeartbeatResponseProto);
-  HeartbeatResponseProto heartbeat(HeartbeatRequestProto request) throws ServiceException;
+//  HeartbeatResponseProto heartbeat(HeartbeatRequestProto request) throws ServiceException;
 
   //  rpc startLogSegment(StartLogSegmentRequestProto)
   //      returns (StartLogSegmentResponseProto);
@@ -129,7 +129,7 @@ interface QJournalProtocolPB
 
   //  rpc purgeLogs(PurgeLogsRequestProto)
   //      returns (PurgeLogsResponseProto);
-  PurgeLogsResponseProto purgeLogs(PurgeLogsRequestProto request) throws ServiceException;
+//  PurgeLogsResponseProto purgeLogs(PurgeLogsRequestProto request) throws ServiceException;
   //  rpc getEditLogManifest(GetEditLogManifestRequestProto)
   //      returns (GetEditLogManifestResponseProto);
   GetEditLogManifestResponseProto getEditLogManifest(GetEditLogManifestRequestProto request) throws ServiceException;

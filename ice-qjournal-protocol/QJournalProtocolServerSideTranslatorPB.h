@@ -8,7 +8,7 @@
 #define QJOURNALPROTOCOLSERVERSIDETRANSLATORPB_H_
 
 #include <Ice/Ice.h>
-#include "QJournalProtocolPB.h"
+#include <QJournalProtocolPB.h>
 #include <string>
 //#include "../src/QjournalProtocol.h"
 #include "/home/psarda/workspace/jn-server-cc/src/QjournalProtocol.h"

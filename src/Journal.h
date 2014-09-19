@@ -19,7 +19,7 @@
 #include "../util/RequestInfo.h"
 #include <boost/scoped_ptr.hpp>
 #include "../util/Logger.h"
-#include "../ice-qjournal-protocol/QJournalProtocolPB.h"
+#include <QJournalProtocolPB.h>
 #include <Ice/Ice.h>
 #include <ice-rpc-cc/src/Server.h>
 
