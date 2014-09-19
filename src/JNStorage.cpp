@@ -39,9 +39,12 @@ JNStorage::clearLogDirectory() {
         if (dir_exists){
             boost::filesystem::remove_all(currentDir.c_str());
         }
+        dir_exists = boost::filesystem::exists(logDir.c_str());
+        if(!dir_exists)
+            boost::filesystem::create_directory(logDir);
         boost::filesystem::create_directory(currentDir);
     }catch (const boost::filesystem::filesystem_error& ex){
-        cout << ex.what() << '\n';
+        LOG.error("%s", ex.what());
         return -1;
     }
 
@@ -51,20 +54,22 @@ JNStorage::clearLogDirectory() {
 int
 JNStorage::format(const NamespaceInfo& nsInfo) {
     setStorageInfo(nsInfo);
-    cout << "Formatting journal " << logDir  << " with nsid: "  << getNamespaceID();
+    LOG.info("Formatting journal %s with nsid: %d",logDir.c_str(), getNamespaceID());
     // Unlock the directory before formatting, because we will
     // re-analyze it after format(). The analyzeStorage() call
     // below is reponsible for re-locking it. This is a no-op
     // if the storage is not currently locked.
 //TODO:    unlockAll();
-    clearLogDirectory();
-    writeProperties(getVersionFile());
-    int cs = createPaxosDir();
-    if(cs != 0) {
-        cout << "Could not create paxos dir: " << getPaxosDir();
-    }else {
-        cout << "Created paxos dir: " << getPaxosDir();
+    if(clearLogDirectory() != 0) {
+        return -1;
     }
+    writeProperties(getVersionFile());
+    if(createPaxosDir() != 0) {
+       LOG.error("Could not create paxos dir: %s", getPaxosDir().c_str());
+        return -1;
+    }
+    LOG.info("Created paxos dir: %s", getPaxosDir().c_str());
+
     // TODO :As part of analyze storage , once the storagestate is normal , they are reading back again properties from VERSION file
     // To me it looks redundant. Hence skipping analyzeStorage for now
     // Will revisit this decision
@@ -75,16 +80,14 @@ JNStorage::format(const NamespaceInfo& nsInfo) {
 int
 JNStorage::checkConsistentNamespace(NamespaceInfo nsInfo) {
     if (nsInfo.getNamespaceID() != getNamespaceID()) {
-        cout << "Incompatible namespaceID for journal " <<
-          logDir << ": Metaserver has nsId " << nsInfo.getNamespaceID() <<
-          " but storage has nsId " << getNamespaceID();
+        LOG.error("Incompatible namespaceID for journal %s : Metaserver has nsId %d  but storage has nsId %d",
+          logDir.c_str(), nsInfo.getNamespaceID(),  getNamespaceID());
         return -1;
     }
 
     if (nsInfo.getClusterID() != getClusterID()) {
-      cout << "Incompatible clusterID for journal " <<
-          logDir << ": NameNode has clusterId '" << nsInfo.getClusterID() <<
-          "' but storage has clusterId '" << getClusterID() << "'";
+        LOG.error("Incompatible clusterID for journal %s : NameNode has clusterId '%s' but storage has clusterId '%s'",
+                logDir.c_str(),nsInfo.getClusterID().c_str(), getClusterID().c_str());
       return -1;
     }
 
