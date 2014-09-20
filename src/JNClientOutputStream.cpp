@@ -36,7 +36,7 @@ int JNClientOutputStream::abort(){
 }
 
 int
-JNClientOutputStream::writeRaw(const char* records) {
+JNClientOutputStream::writeRaw(const string& records) {
       stream << records;
       return 0;
   }

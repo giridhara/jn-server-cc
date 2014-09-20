@@ -400,7 +400,9 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
 int
 Journal::journal(const RequestInfo& reqInfo,
       long segmentTxId, long firstTxnId,
-      int numTxns, const char* records) {
+      int numTxns, const string& records) {
+
+    LOG.debug("Received request from client to persist following record '%s'", records);
 
     if(checkFormatted() != 0 ) {
         return -1;
@@ -451,7 +453,7 @@ Journal::journal(const RequestInfo& reqInfo,
     */
     curSegment->writeRaw(records);
     if(!curSegment->flush()) {
-        LOG.error("Not able to write record '%s'to disk ", records);
+        LOG.error("Not able to write record '%s'to disk ", records.c_str());
         abort();
     }
 

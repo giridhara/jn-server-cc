@@ -48,7 +48,7 @@ public :
    * to write edits to their local logs.
    */
   virtual int journal(const RequestInfo& reqInfo, const long segmentTxId,
-          const long firstTxnId, const int numTxns, const char* records) = 0;
+          const long firstTxnId, const int numTxns, const string& records) = 0;
 
   /**
    * Start writing to a new log segment on the JournalNode.

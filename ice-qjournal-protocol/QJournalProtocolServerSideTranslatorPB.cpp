@@ -60,7 +60,7 @@ QJournalProtocolServerSideTranslatorPB::format(const hadoop::hdfs::FormatRequest
 hadoop::hdfs::JournalResponseProto
 QJournalProtocolServerSideTranslatorPB::journal(const hadoop::hdfs::JournalRequestProto& req, const ::Ice::Current& current){
     RequestInfo ri(req.reqinfo());
-    int ret = impl->journal(ri, req.segmenttxnid(), req.firsttxnid(), req.numtxns(), req.records().c_str());
+    int ret = impl->journal(ri, req.segmenttxnid(), req.firsttxnid(), req.numtxns(), req.records());
     throwExceptionOnError(ret);
     hadoop::hdfs::JournalResponseProto resp;
     //TODO:changed return VOID_JOURNAL_RESPONSE to hadoop::hdfs::JournalResponseProto::default_instance()

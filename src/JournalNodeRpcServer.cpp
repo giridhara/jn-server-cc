@@ -70,7 +70,7 @@ JournalNodeRpcServer::format(const string& journalId, const NamespaceInfo& nsInf
 
 int
 JournalNodeRpcServer::journal(const RequestInfo& reqInfo, const long segmentTxId,
-            const long firstTxnId, const int numTxns, const char* records){
+            const long firstTxnId, const int numTxns, const string& records){
     Journal* journalPtr = 0;
     int rc = jn.getOrCreateJournal(reqInfo.getJournalId(), journalPtr);
     if(rc != 0) {

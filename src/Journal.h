@@ -100,7 +100,7 @@ public:
     int finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId, const long endTxId);
     int journal(const RequestInfo& reqInfo,
           long segmentTxId, long firstTxnId,
-          int numTxns, const char* records);
+          int numTxns, const string& records);
     int prepareRecovery(const RequestInfo& reqInfo, const long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret);
     int acceptRecovery(const RequestInfo& reqInfo, const hadoop::hdfs::SegmentStateProto& segment, const string& fromUrl);
     int getEditLogManifest(const long sinceTxId, const bool inProgressOk, vector<EditLogFile>& ret);

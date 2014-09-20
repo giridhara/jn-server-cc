@@ -47,7 +47,7 @@ public:
             const uint64_t epoch, hadoop::hdfs::NewEpochResponseProto&);
     int format(const string& journalId, const NamespaceInfo& nsInfo);
     int journal(const RequestInfo& reqInfo, const long segmentTxId,
-            const long firstTxnId, const int numTxns, const char* records);
+            const long firstTxnId, const int numTxns, const string& records);
     int startLogSegment(const RequestInfo& reqInfo,
           const long txid, const int layoutVersion);
     int finalizeLogSegment(const RequestInfo& reqInfo,
