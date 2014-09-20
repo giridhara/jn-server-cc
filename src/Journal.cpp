@@ -402,7 +402,7 @@ Journal::journal(const RequestInfo& reqInfo,
       long segmentTxId, long firstTxnId,
       int numTxns, const string& records) {
 
-    LOG.debug("Received request from client to persist following record '%s'", records);
+    LOG.debug("Received request from client to persist following record '%s'", records.c_str());
 
     if(checkFormatted() != 0 ) {
         return -1;
