@@ -51,8 +51,9 @@ bool
 JNClientOutputStream::create(int layoutVersion) {
     stream.seekp(0);
     // write header - layout version , followed by layout flags
-    stream << layoutVersion;
-    stream << 0;
+    stream.write((const char*)&layoutVersion, sizeof(int));
+    int layoutFlags = 0;
+    stream.write((const char*)&layoutFlags, sizeof(int));
     return flush();
 }
 
