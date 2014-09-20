@@ -67,8 +67,13 @@ namespace JournalServiceServer
       bool flush();
 
     private:
-      string filename;
-      ofstream  stream;
+      template <typename T>
+              void store_as_big_endian(T u);
+        void writeInt(int i) { store_as_big_endian<int>(i);}
+        void writeLong(long l) { store_as_big_endian<long>(l);}
+
+        string filename;
+        ofstream  stream;
   };
 }
 #endif //JNCLIENT_OUTPUT_STREAM_H

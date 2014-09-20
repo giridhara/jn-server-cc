@@ -17,6 +17,7 @@
  */
 
 #include "JNClientOutputStream.h"
+#include "util/JNServiceMiscUtils.h"
 
 namespace JournalServiceServer
 {
@@ -51,10 +52,28 @@ bool
 JNClientOutputStream::create(int layoutVersion) {
     stream.seekp(0);
     // write header - layout version , followed by layout flags
-    stream.write((const char*)&layoutVersion, sizeof(int));
-    int layoutFlags = 0;
-    stream.write((const char*)&layoutFlags, sizeof(int));
+    writeInt(layoutVersion);
+    writeInt(0);
     return flush();
 }
 
+template <typename T>
+   void
+   JNClientOutputStream::store_as_big_endian(T u)
+   {
+     union
+     {
+       T u;
+       unsigned char u8[sizeof(T)];
+     } source;
+
+     source.u = u;
+     for (size_t k = 0; k < sizeof(T); k++)
+     {
+         if (IS_LITTLE_ENDIAN)
+           stream.write( reinterpret_cast < const char* >( &source.u8[sizeof(T) - k - 1]), 1);
+         else
+           stream.write(reinterpret_cast < const char* >(&source.u8[k]), 1);
+     }
+   }
 }
