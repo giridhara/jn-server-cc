@@ -12,8 +12,11 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include "JNServiceMiscUtils.h"
 
 using namespace std;
+
+namespace JournalServiceServer {
 
 class PersistentLongFile {
     private:
@@ -54,7 +57,8 @@ class PersistentLongFile {
 
     int set(long newVal) {
         if (value != newVal || !loaded) {
-            return writeFile(file, newVal);
+            if(writeFile(file, newVal) != 0)
+                return -1;
         }
         value = newVal;
         loaded = true;
@@ -80,6 +84,11 @@ class PersistentLongFile {
 
     int readFile(const string& file, const long& defaultVal, long &result) const {
         long val = defaultVal;
+
+        if(!file_exists(file)){
+            result = val;
+            return 0;
+        }
         ifstream ifs (file.c_str());
         if(!ifs.is_open()) {
             return -1;
@@ -99,5 +108,7 @@ class PersistentLongFile {
         return 0;
     }
 };
+
+}
 
 #endif /* PERSISTENTLONGFILE_H_ */

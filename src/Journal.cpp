@@ -373,7 +373,7 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
         return -1;
     }
     if (curLastWriterEpoch != reqInfo.getEpoch()) {
-      LOG.info("Updating lastWriterEpoch from %d to %d", reqInfo.getEpoch(), curLastWriterEpoch);
+      LOG.info("Updating lastWriterEpoch from %d to %d", curLastWriterEpoch, reqInfo.getEpoch());
       if(lastWriterEpoch->set(reqInfo.getEpoch()) !=0 ) {
           return -1;
       }
