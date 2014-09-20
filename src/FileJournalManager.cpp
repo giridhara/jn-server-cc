@@ -164,24 +164,25 @@ FileJournalManager::GetFilesInDirectory(std::vector<string> &out, const string &
             continue;
 
         cout << "found file " << full_file_name << endl;
-        out.push_back(full_file_name);
+        out.push_back(file_name);
     }
     closedir(dir);
 }
 //
-void FileJournalManager::matchEditLogs(string logDir,
+void FileJournalManager::matchEditLogs(const string& dir,
         vector<EditLogFile>& ret)
 {
     vector<string> filenames;
-    GetFilesInDirectory(filenames, logDir);
-    return matchEditLogs(filenames, ret);
+    GetFilesInDirectory(filenames, dir);
+    return matchEditLogs(dir, filenames, ret);
 }
 
-void FileJournalManager::matchEditLogs(const vector<string>& filesInStorage,
+void FileJournalManager::matchEditLogs(const string& dir,  const vector<string>& filesInStorage,
         vector<EditLogFile>& ret)
 {
     for (vector<string>::const_iterator it = filesInStorage.begin();
             it != filesInStorage.end(); ++it) {
+        cout << "trying to match following file with patterns '" << *it << "'" << endl;
         // Check for edits
         boost::smatch finalizedMatchResults;
         if (boost::regex_match(*it, finalizedMatchResults, FINALIZED_PATTERN)) {
@@ -189,7 +190,7 @@ void FileJournalManager::matchEditLogs(const vector<string>& filesInStorage,
             string endTxStr(finalizedMatchResults[2]);
             long startTxId = std::strtol(startTxStr.c_str(), 0, 10);
             long endTxId = std::strtol(endTxStr.c_str(), 0, 10);
-            EditLogFile elf(*it, startTxId, endTxId, false);
+            EditLogFile elf(dir + "/" + (*it), startTxId, endTxId, false);
             ret.push_back(elf);
             continue;
         }
@@ -198,9 +199,11 @@ void FileJournalManager::matchEditLogs(const vector<string>& filesInStorage,
         boost::smatch inProgressMatchResults;
         if (boost::regex_match(*it, inProgressMatchResults,
                 IN_PROGRESS_PATTERN)) {
+            cout << "following file matched with in_progress pattern '" << *it << "'" << endl;
             string startTxStr(inProgressMatchResults[1]);
             long startTxId = std::strtol(startTxStr.c_str(), 0, 10);
-            EditLogFile elf(*it, startTxId, INVALID_TXID, true);
+            cout << "start txid of in_progress matched file '" << *it << "' is " << startTxId << endl;
+            EditLogFile elf(dir + "/" + (*it), startTxId, INVALID_TXID, true);
             ret.push_back(elf);
         }
     }

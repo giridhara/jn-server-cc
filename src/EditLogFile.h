@@ -20,10 +20,10 @@ namespace JournalServiceServer
 class EditLogFile
 {
 public:
-    EditLogFile(string file, long firstTxId,
+    EditLogFile(string fullFileName, long firstTxId,
                     long lastTxId, bool inProgress)
         :
-        file(file),
+        fullFileName(fullFileName),
         firstTxId(firstTxId),
         lastTxId(lastTxId),
         inProgress(inProgress),
@@ -45,8 +45,7 @@ public:
       : firstTxId(other.firstTxId),
         inProgress(other.inProgress)
     {
-      cout << "copy constructor is called for file " << other.file << endl;
-      file = other.file;
+      fullFileName = other.fullFileName;
       lastTxId = other.lastTxId;
       corruptHeader = other.corruptHeader;
     }
@@ -65,7 +64,7 @@ public:
 
 
     EditLogFile():
-        file(""),
+        fullFileName(""),
         firstTxId(INVALID_TXID),
         lastTxId(INVALID_TXID),
         inProgress(false),
@@ -73,7 +72,7 @@ public:
     {}
 
     bool isInitialized() {
-        return !file.empty();
+        return !fullFileName.empty();
     }
 
     virtual ~EditLogFile() {}
@@ -106,8 +105,10 @@ public:
     }
 
     string getFile() {
-      return file;
+      return fullFileName;
     }
+
+
 
     bool hasCorruptHeader() {
       return corruptHeader;
@@ -118,7 +119,7 @@ public:
     const bool operator==(const EditLogFile &other) const;
 
     int scanLog() {
-      return JNClientInputStream::scanLog(file, lastTxId, corruptHeader);
+      return JNClientInputStream::scanLog(fullFileName, lastTxId, corruptHeader);
     }
 
     int moveAsideCorruptFile() {
@@ -139,7 +140,7 @@ public:
    int renameSelf(string newSuffix);
 
 private :
-    string file;
+    string fullFileName;
     // firstTxId is supposed to be a constant
     long firstTxId;
     long lastTxId;

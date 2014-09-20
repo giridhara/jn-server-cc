@@ -43,7 +43,7 @@ bool HostPortPair::isValid(string name) {
 
 string getNameNodeFileName(const string filenamePrefix, long txid) {
      ostringstream strm;
-     strm << filenamePrefix;
+     strm << filenamePrefix << "_";
      strm  << setfill('0') << setw(19) << txid;
     return strm.str();
 }
