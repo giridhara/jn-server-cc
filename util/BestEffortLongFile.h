@@ -112,13 +112,13 @@ public:
             if(end != cstring+line.length())
                 return -1;
             value = readval;
-            opened = true;
         }
 
        // Now open file for future writes.
        ostrm.open(filename.c_str());
        if(!ostrm.is_open())
            return -1;
+       opened = true;
        return 0;
     }
 
