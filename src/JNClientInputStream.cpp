@@ -41,6 +41,8 @@ JNClientInputStream::scanLog(string& filename, long& lastTxId, bool& hasHeaderCo
     }
     std::stringstream buffer;
     buffer << t.rdbuf();
+    cout << "data read from file is '" << buffer.str() << "'" << endl;
+    cout << "length of data read from file is " << buffer.str().length() << endl;
     JNClientInputStream in(buffer.str());
     t.close();
     if (in.mCurPosition == 0) {
@@ -61,6 +63,9 @@ JNClientInputStream::scanLog(string& filename, long& lastTxId, bool& hasHeaderCo
           LOG.error("Got error after scanning over %d transactions at position %d", numValid, in.mCurPosition);
           return -1;
         }
+        if(txid == INVALID_TXID){
+            break;
+        }
         if (tempLast == INVALID_TXID || txid > tempLast) {
             tempLast = txid;
         }
@@ -80,6 +85,11 @@ JNClientInputStream::scanLog(string& filename, long& lastTxId, bool& hasHeaderCo
 int
 JNClientInputStream::scanOp(long& ret) {
     unsigned char opcode;
+    //End of File Reached
+    if(mCurPosition >= mStrm.length()) {
+        ret =  INVALID_TXID;
+        return 0;
+    }
     if (readOpcode(opcode) != 0) {
         LOG.error("Error while parsing transaction logs to get opcode");
         ret = INVALID_TXID;

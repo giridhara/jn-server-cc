@@ -13,6 +13,11 @@
 
 #include <stdint.h>
 #include <string>
+#include <Ice/Properties.h>
+#include <Ice/Ice.h>
+#include "Logger.h"
+#include <fstream>
+
 using namespace std;
 
 namespace JournalServiceServer
@@ -23,7 +28,7 @@ const string STORAGE_FILE_VERSION  = "VERSION";
 class StorageInfo
 {
 public:
-    StorageInfo(uint32_t layoutV, string cid, uint32_t nsID,  uint64_t cT)
+    StorageInfo(int32_t layoutV, string cid, int32_t nsID,  uint64_t cT)
         :
         layoutVersion(layoutV),
         clusterID(cid),
@@ -66,6 +71,33 @@ public:
     * Modified during upgrades.
     */
      long getCTime() { return cTime; }
+
+     int readProperties(const string& from){
+         ifstream is(from.c_str());
+         if(!is.is_open()){
+             LOG.error("File %s is missing", from.c_str());
+             return -1;
+         }
+         is.close();
+
+         Ice::PropertiesPtr properties = Ice::createProperties();
+         properties->load(from);
+         string lv = properties->getProperty("layoutVersion");
+         string cid = properties->getProperty("clusterID");
+         string nsid = properties->getProperty("namespaceID");
+         string ct = properties->getProperty("cTime");
+         if(lv.empty() || cid.empty() || nsid.empty() || ct.empty()) {
+             LOG.error("Bad VERSION file %s",from.c_str());
+             return -1;
+         }
+         layoutVersion =  atoi(lv.c_str());
+         clusterID = cid;
+         namespaceID = atoi(nsid.c_str());
+         cTime = strtoul(ct.c_str(), 0, 10);
+         return 0;
+     }
+
+
 
 private:
     int   layoutVersion;   // layout version of the storage data

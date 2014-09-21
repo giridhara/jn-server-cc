@@ -71,7 +71,7 @@ template <typename T>
      for (size_t k = 0; k < sizeof(T); k++)
      {
          if (IS_LITTLE_ENDIAN)
-           stream.write( reinterpret_cast < const char* >( &source.u8[sizeof(T) - k - 1]), 1);
+           stream.write( reinterpret_cast < const char* >(&source.u8[sizeof(T) - k - 1]), 1);
          else
            stream.write(reinterpret_cast < const char* >(&source.u8[k]), 1);
      }

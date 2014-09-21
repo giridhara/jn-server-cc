@@ -59,14 +59,15 @@ public:
         lastPromisedEpoch.reset(0);
         lastWriterEpoch.reset(0);
         committedTxnId.reset(0);
- //       TODO :: have to read about how to handle failures in constructors in c++
-            refreshCachedData();
+ //     TODO :: have to read about how to handle failures in constructors in c++
+        refreshCachedData();
 
-    //        EditLogFile latest = scanStorageForLatestEdits();
-    //        if (latest != null) {
-    //          highestWrittenTxId = latest.getLastTxId();
-    //        }
-
+        EditLogFile latest;
+        if(scanStorageForLatestEdits(latest) != 0) {
+            if (latest.isInitialized()) {
+                highestWrittenTxId = latest.getLastTxId();
+            }
+        }
     }
     virtual ~Journal();
 

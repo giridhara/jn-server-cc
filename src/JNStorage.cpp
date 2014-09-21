@@ -74,7 +74,13 @@ JNStorage::format(const NamespaceInfo& nsInfo) {
     // TODO :As part of analyze storage , once the storagestate is normal , they are reading back again properties from VERSION file
     // To me it looks redundant. Hence skipping analyzeStorage for now
     // Will revisit this decision
-    analyzeStorage();
+    if(analyzeStorage() != 0 ) {
+        return -1;
+    }
+    if(state == NORMAL) {
+        if(readProperties(getVersionFile()) != 0)
+            return -1;
+    }
     return 0;
 }
 
