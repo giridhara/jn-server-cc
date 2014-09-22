@@ -40,7 +40,6 @@ FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgres
     matchEditLogs(currentDir, allLogFiles);
 
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
-        cout << "considering elf [" << it->getFirstTxId() << "," << it->getLastTxId() << "]"  << "elf has corrupt header??" << it->hasCorruptHeader() << endl;
         if((*it).hasCorruptHeader() || (!inProgressOk && (*it).isInProgress())) {
             continue;
         }
@@ -49,12 +48,10 @@ FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgres
         EditLogFile elf(" ", (*it).getFirstTxId(), (*it).getLastTxId(), false);
         if((*it).getFirstTxId() >= firstTxId) {
             ret.push_back(elf);
-            cout << "using above considered elf" << endl;
         } else if((*it).getFirstTxId() < firstTxId && firstTxId <= (*it).getLastTxId()) {
             // If the firstTxId is in the middle of an edit log segment. Return this
             // anyway and let the caller figure out whether it wants to use it.
             ret.push_back(elf);
-            cout << "using above considered elf" << endl;
         }
     }
 
@@ -158,9 +155,6 @@ FileJournalManager::GetFilesInDirectory(std::vector<string> &out, const string &
         const string file_name = ent->d_name;
         const string full_file_name = directory + "/" + file_name;
 
-//        if (file_name[0] == '.')
-//            continue;
-
         if (stat(full_file_name.c_str(), &st) == -1)
             continue;
 
@@ -169,7 +163,6 @@ FileJournalManager::GetFilesInDirectory(std::vector<string> &out, const string &
         if (is_directory)
             continue;
 
-        cout << "found file " << full_file_name << endl;
         out.push_back(file_name);
     }
     closedir(dir);

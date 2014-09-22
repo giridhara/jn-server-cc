@@ -42,8 +42,8 @@ JNStorage::clearLogDirectory() {
         }
         dir_exists = boost::filesystem::exists(logDir.c_str());
         if(!dir_exists)
-            boost::filesystem::create_directory(logDir);
-        boost::filesystem::create_directory(currentDir);
+            boost::filesystem::create_directories(logDir);
+        boost::filesystem::create_directories(currentDir);
     }catch (const boost::filesystem::filesystem_error& ex){
         LOG.error("%s", ex.what());
         return -1;

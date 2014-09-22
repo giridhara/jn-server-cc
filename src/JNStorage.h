@@ -9,7 +9,7 @@
 #define JNSTORAGE_H_
 
 #include <boost/regex.hpp>
-#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem.hpp>
 #include <sstream>
 #include <fstream>
 #include "../util/StorageInfo.h"
@@ -81,7 +81,7 @@ public:
     int createPaxosDir() {
         boost::filesystem::path dir(getPaxosDir());
         try{
-            boost::filesystem::create_directory(dir);
+            boost::filesystem::create_directories(dir);
         }catch (const boost::filesystem::filesystem_error& ex){
             cout << ex.what() << '\n';
             return -1;

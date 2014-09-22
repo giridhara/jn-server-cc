@@ -38,7 +38,6 @@ static int checkStorageInfo(JNStorage& storage, char* storageInfo) {
     tok = strtok(storageInfo, ":");
     vector<string> storageInfoTokens;
     while (tok) {
-        printf("Token: %s\n", tok);
         storageInfoTokens.push_back(tok);
         tok = strtok(NULL, ":");
     }
