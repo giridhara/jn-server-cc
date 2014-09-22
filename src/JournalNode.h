@@ -42,15 +42,18 @@ public:
         }else {
             localDir =  editsDir;
         }
-        string httpsAddrString = conf->getProperty(DFS_JOURNALNODE_HTTPS_ADDRESS_KEY);
+        string httpsAddrString = conf->getProperty(DFS_JOURNALNODE_HTTP_ADDRESS_KEY);
         if(httpsAddrString.empty()){
-            httpServerURI = DFS_JOURNALNODE_HTTPS_ADDRESS_DEFAULT;
+            httpServerURI = DFS_JOURNALNODE_HTTP_ADDRESS_DEFAULT;
+            cout << "httpServerURI being used is " << httpServerURI;
         }else{
             httpServerURI = httpsAddrString;
         }
+        cout << "httpServerURI being used is " << httpServerURI;
 
         HostPortPair hpp(httpServerURI);
         httpPort = hpp.port;
+        cout << "httpPort being used is " << httpPort;
     }
     virtual ~JournalNode() {}
     string getHttpServerURI() {

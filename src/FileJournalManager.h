@@ -25,7 +25,7 @@ namespace JournalServiceServer
 
 static const boost::regex IN_PROGRESS_PATTERN("^edits_inprogress_(\\d+)$");
 
-static const boost::regex FINALIZED_PATTERN("^edits_(\\d+)_(\\d+)$");
+static const boost::regex FINALIZED_PATTERN("^edits_(\\d+)-(\\d+)$");
 
 class FileJournalManager
 {

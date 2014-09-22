@@ -34,11 +34,13 @@ FileJournalManager::~FileJournalManager()
  */
 void
 FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret) {
+    cout << "got request to find all edit log segments after " << firstTxId << " in progress segments are also fine ?" << inProgressOk << endl;
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
     matchEditLogs(currentDir, allLogFiles);
 
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
+        cout << "considering elf [" << it->getFirstTxId() << "," << it->getLastTxId() << "]"  << "elf has corrupt header??" << it->hasCorruptHeader() << endl;
         if((*it).hasCorruptHeader() || (!inProgressOk && (*it).isInProgress())) {
             continue;
         }
@@ -47,10 +49,12 @@ FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgres
         EditLogFile elf(" ", (*it).getFirstTxId(), (*it).getLastTxId(), false);
         if((*it).getFirstTxId() >= firstTxId) {
             ret.push_back(elf);
+            cout << "using above considered elf" << endl;
         } else if((*it).getFirstTxId() < firstTxId && firstTxId <= (*it).getLastTxId()) {
             // If the firstTxId is in the middle of an edit log segment. Return this
             // anyway and let the caller figure out whether it wants to use it.
             ret.push_back(elf);
+            cout << "using above considered elf" << endl;
         }
     }
 
@@ -95,6 +99,7 @@ FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
 
 void
 FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
+    cout << "getting all logs from txid : " << fromTxId << endl;
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
     matchEditLogs(currentDir, allLogFiles);
@@ -102,6 +107,7 @@ FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
         if (fromTxId <= (*it).getFirstTxId() ||
                 (*it).containsTxId(fromTxId)) {
+            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
             ret.push_back(*it);
         }
     }
@@ -123,7 +129,7 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
     vector<EditLogFile > retEditLogFile;
     for (vector<EditLogFile>::iterator it = matchedEditLogs.begin(); it != matchedEditLogs.end(); ++it) {
         if ((*it).getFirstTxId() == startTxId) {
-            cout << "pushing elf element from vector into local vector" << endl;
+            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
             retEditLogFile.push_back(*it);
         }
     }
@@ -182,7 +188,6 @@ void FileJournalManager::matchEditLogs(const string& dir,  const vector<string>&
 {
     for (vector<string>::const_iterator it = filesInStorage.begin();
             it != filesInStorage.end(); ++it) {
-        cout << "trying to match following file with patterns '" << *it << "'" << endl;
         // Check for edits
         boost::smatch finalizedMatchResults;
         if (boost::regex_match(*it, finalizedMatchResults, FINALIZED_PATTERN)) {
@@ -199,10 +204,8 @@ void FileJournalManager::matchEditLogs(const string& dir,  const vector<string>&
         boost::smatch inProgressMatchResults;
         if (boost::regex_match(*it, inProgressMatchResults,
                 IN_PROGRESS_PATTERN)) {
-            cout << "following file matched with in_progress pattern '" << *it << "'" << endl;
             string startTxStr(inProgressMatchResults[1]);
             long startTxId = std::strtol(startTxStr.c_str(), 0, 10);
-            cout << "start txid of in_progress matched file '" << *it << "' is " << startTxId << endl;
             EditLogFile elf(dir + "/" + (*it), startTxId, INVALID_TXID, true);
             ret.push_back(elf);
         }
