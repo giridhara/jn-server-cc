@@ -100,6 +100,7 @@ QJournalProtocolServerSideTranslatorPB::prepareRecovery(const hadoop::hdfs::Prep
     hadoop::hdfs::PrepareRecoveryResponseProto resp;
     RequestInfo ri(req.reqinfo());
     int ret = impl->prepareRecovery(ri, req.segmenttxid(), resp);
+    cout << "contents of prepareRecovery response" << resp.lastwriterepoch() << resp.lastcommittedtxid() << endl;
     throwExceptionOnError(ret);
     return resp;
 }

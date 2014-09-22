@@ -87,6 +87,7 @@ public:
         if (opened) {
           return 0;
         }
+        char line[128];
 
         ifstream ifs(filename.c_str());
         if(!ifs.is_open()) {
@@ -94,24 +95,30 @@ public:
             value = defaultVal;
         } else {
             long readval;
-            string line;
-            if (!getline(ifs,line)) {
-                ifs.close();
-                return -1;
-            }
-            //done reading from stream, hence closing it
-            ifs.close();
+            char line[128];
+            ifs.getline(line, 128);
 
-            if(line.length() != 19) {
-                LOG.error("File %s had invalid length:", filename.c_str());
-                return -1;
+            if(ifs.good())    // If a line was successfully read
+            {
+                //done reading from stream, hence closing it
+                ifs.close();
+                if(strlen(line) == 0)  // Skip any blank lines
+                    value = defaultVal;
+                else{
+                    if(strlen(line) != 19) {
+                        LOG.error("File %s had invalid length:", filename.c_str());
+                        return -1;
+                    }
+                    char *end;
+                    readval = strtol(line, &end, 10);
+                    if(end != line+19)
+                        return -1;
+                    value = readval;
+                }
+            }else{
+                ifs.close();
+                value= defaultVal;
             }
-            char *end;
-            const char *cstring = line.c_str();
-            readval = strtol(cstring, &end, 10);
-            if(end != cstring+line.length())
-                return -1;
-            value = readval;
         }
 
        // Now open file for future writes.

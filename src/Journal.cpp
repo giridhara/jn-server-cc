@@ -301,6 +301,7 @@ Journal::getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, 
     ssp.set_starttxid(segmentTxId);
     ssp.set_endtxid(elf.getLastTxId());
     ssp.set_isinprogress(elf.isInProgress());
+    isInitialized = true;
 
     //TODO : Looks like i need to provide implementation for '<<' operator for EditLogFile,
     //so that logging as done below is possible
@@ -473,7 +474,7 @@ int
 Journal::purgePaxosDecision(long segmentTxId) {
     string paxosFile = storage.getPaxosFile(segmentTxId);
     if (file_exists(paxosFile)) {
-      if (!file_delete(paxosFile)) {
+      if (file_delete(paxosFile) != 0) {
         LOG.error("Unable to delete paxos file %s", paxosFile.c_str());
         return -1;
       }
