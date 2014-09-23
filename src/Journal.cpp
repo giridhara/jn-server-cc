@@ -55,7 +55,9 @@ Journal::scanStorageForLatestEdits(EditLogFile& ret) {
 
     LOG.info("Scanning storage ");
     vector<EditLogFile> files;
-    fjm.getLogFiles(0, files);
+    if(fjm.getLogFiles(0, files) != 0 ){
+        return -1;
+    }
 
     for (unsigned i = files.size(); i-- > 0; ){
         EditLogFile& latestLog = files[i];
@@ -676,7 +678,9 @@ Journal::getEditLogManifest(const long sinceTxId, const bool inProgressOk, vecto
 
     vector<EditLogFile> temp;
 
-    fjm.getRemoteEditLogs(sinceTxId, inProgressOk, temp);
+    if(fjm.getRemoteEditLogs(sinceTxId, inProgressOk, temp) != 0 ) {
+        return -1;
+    }
 
     if (inProgressOk) {
       EditLogFile* log = 0;

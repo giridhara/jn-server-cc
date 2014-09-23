@@ -32,19 +32,19 @@ FileJournalManager::~FileJournalManager()
  * @return a list of remote edit logs
  * @throws IOException if edit logs cannot be listed.
  */
-void
+int
 FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret) {
     cout << "got request to find all edit log segments after " << firstTxId << " in progress segments are also fine ?" << inProgressOk << endl;
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
-    matchEditLogs(currentDir, allLogFiles);
+    if (matchEditLogs(currentDir, allLogFiles) != 0) {
+        return -1;
+    }
 
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
         if((*it).hasCorruptHeader() || (!inProgressOk && (*it).isInProgress())) {
             continue;
         }
-        //TODO : using EditLogFile itself in place of RemoteEditLog , as RemoteEditLog looks redundant for me
-        // might have to revisit this decision
         EditLogFile elf(" ", (*it).getFirstTxId(), (*it).getLastTxId(), false);
         if((*it).getFirstTxId() >= firstTxId) {
             ret.push_back(elf);
@@ -56,6 +56,7 @@ FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgres
     }
 
     sort(ret.begin(), ret.end());
+    return 0;
 }
 
 int
@@ -93,13 +94,14 @@ FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
     return 0;
 }
 
-
-void
+int
 FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
     cout << "getting all logs from txid : " << fromTxId << endl;
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
-    matchEditLogs(currentDir, allLogFiles);
+    if(matchEditLogs(currentDir, allLogFiles) != 0){
+        return -1;
+    }
 
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
         if (fromTxId <= (*it).getFirstTxId() ||
@@ -110,8 +112,8 @@ FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
     }
 
     sort(ret.begin(), ret.end());
+    return 0;
 }
-
 
 int
 FileJournalManager::getLogFile(long startTxId, EditLogFile& ret) {
@@ -119,10 +121,11 @@ FileJournalManager::getLogFile(long startTxId, EditLogFile& ret) {
 }
 
 int
-FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
-{
+FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result) {
     vector<EditLogFile> matchedEditLogs;
-    matchEditLogs(dir, matchedEditLogs);
+    if(matchEditLogs(dir, matchedEditLogs) != 0) {
+        return -1;
+    }
     vector<EditLogFile > retEditLogFile;
     for (vector<EditLogFile>::iterator it = matchedEditLogs.begin(); it != matchedEditLogs.end(); ++it) {
         if ((*it).getFirstTxId() == startTxId) {
@@ -144,65 +147,66 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result)
     return -1;
 }
 
-void
-FileJournalManager::GetFilesInDirectory(std::vector<string> &out, const string &directory) {
-    DIR *dir;
-    class dirent *ent;
-    class stat st;
-
-    dir = opendir(directory.c_str());
-    while ((ent = readdir(dir)) != NULL) {
-        const string file_name = ent->d_name;
-        const string full_file_name = directory + "/" + file_name;
-
-        if (stat(full_file_name.c_str(), &st) == -1)
-            continue;
-
-        const bool is_directory = (st.st_mode & S_IFDIR) != 0;
-
-        if (is_directory)
-            continue;
-
-        out.push_back(file_name);
+int FileJournalManager::GetFilesInDirectory(const string& directory, vector<string> &out) {
+    try{
+        boost::filesystem::directory_iterator begin(directory);
+        boost::filesystem::directory_iterator end;
+        for (; begin != end; ++begin) {
+            if (boost::filesystem::is_regular_file(begin->status())) {
+                std::stringstream temp;
+                temp << begin->path().leaf();
+                out.push_back(temp.str().c_str());
+            }
+        }
+    }catch(const boost::filesystem::filesystem_error& ex){
+        LOG.error("%s", ex.what());
+        return -1;
     }
-    closedir(dir);
+    return 0;
 }
-//
-void FileJournalManager::matchEditLogs(const string& dir,
-        vector<EditLogFile>& ret)
-{
+
+int FileJournalManager::matchEditLogs(const string& dir,
+        vector<EditLogFile>& ret) {
     vector<string> filenames;
-    GetFilesInDirectory(filenames, dir);
+    if (GetFilesInDirectory(dir, filenames) != 0) {
+        return -1;
+    }
     return matchEditLogs(dir, filenames, ret);
 }
 
-void FileJournalManager::matchEditLogs(const string& dir,  const vector<string>& filesInStorage,
+int FileJournalManager::matchEditLogs(const string& dir,  const vector<string>& filesInStorage,
         vector<EditLogFile>& ret)
 {
     for (vector<string>::const_iterator it = filesInStorage.begin();
             it != filesInStorage.end(); ++it) {
         // Check for edits
         boost::smatch finalizedMatchResults;
-        if (boost::regex_match(*it, finalizedMatchResults, FINALIZED_PATTERN)) {
-            string startTxStr(finalizedMatchResults[1]);
-            string endTxStr(finalizedMatchResults[2]);
-            long startTxId = std::strtol(startTxStr.c_str(), 0, 10);
-            long endTxId = std::strtol(endTxStr.c_str(), 0, 10);
-            EditLogFile elf(dir + "/" + (*it), startTxId, endTxId, false);
-            ret.push_back(elf);
-            continue;
-        }
-        
-        // Check for in-progress edits
-        boost::smatch inProgressMatchResults;
-        if (boost::regex_match(*it, inProgressMatchResults,
-                IN_PROGRESS_PATTERN)) {
-            string startTxStr(inProgressMatchResults[1]);
-            long startTxId = std::strtol(startTxStr.c_str(), 0, 10);
-            EditLogFile elf(dir + "/" + (*it), startTxId, INVALID_TXID, true);
-            ret.push_back(elf);
+        try{
+            if (boost::regex_match(*it, finalizedMatchResults, FINALIZED_PATTERN)) {
+                string startTxStr(finalizedMatchResults[1]);
+                string endTxStr(finalizedMatchResults[2]);
+                long startTxId = std::strtol(startTxStr.c_str(), 0, 10);
+                long endTxId = std::strtol(endTxStr.c_str(), 0, 10);
+                EditLogFile elf(dir + "/" + (*it), startTxId, endTxId, false);
+                ret.push_back(elf);
+                continue;
+            }
+
+            // Check for in-progress edits
+            boost::smatch inProgressMatchResults;
+            if (boost::regex_match(*it, inProgressMatchResults,
+                    IN_PROGRESS_PATTERN)) {
+                string startTxStr(inProgressMatchResults[1]);
+                long startTxId = std::strtol(startTxStr.c_str(), 0, 10);
+                EditLogFile elf(dir + "/" + (*it), startTxId, INVALID_TXID, true);
+                ret.push_back(elf);
+            }
+        }catch(const std::runtime_error& ex){
+            LOG.error("%s", ex.what());
+            return -1;
         }
     }
+    return 0;
 }
 
 } /* namespace JournalServiceServer */

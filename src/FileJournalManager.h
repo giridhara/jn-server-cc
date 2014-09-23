@@ -37,19 +37,19 @@ public:
     {}
     virtual ~FileJournalManager();
 
-    void getLogFiles(long fromTxId, vector<EditLogFile>& ret);
-    void getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret);
+    int getLogFiles(long fromTxId, vector<EditLogFile>& ret);
+    int getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret);
     int getLogFile(long startTxId, EditLogFile&);
     int getLogFile(string dir, long startTxId, EditLogFile&);
 
-    void matchEditLogs(const string& dir, vector<EditLogFile> & ret );
+    int matchEditLogs(const string& dir, vector<EditLogFile> & ret );
 
-    void matchEditLogs(const string& dir, const vector<string>& filesInStorage, vector<EditLogFile>& ret);
+    int matchEditLogs(const string& dir, const vector<string>& filesInStorage, vector<EditLogFile>& ret);
 
     int finalizeLogSegment(long firstTxId, long lastTxId);
     int startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>&);
 
-    void GetFilesInDirectory(std::vector<string>& out, const string& directory);
+    int GetFilesInDirectory(const string& directory, vector<string> &out);
 
 private:
 
