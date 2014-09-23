@@ -49,7 +49,11 @@ Journal::refreshCachedData() {
 //call isInitialized function on 'ret' before using it
 int
 Journal::scanStorageForLatestEdits(EditLogFile& ret) {
-    if (!file_exists(storage.getCurrentDir())) {
+    bool hasCurrentDir = false;
+    if(dir_exists(storage.getCurrentDir(), hasCurrentDir) !=0 ){
+        return -1;
+    }
+    if (!hasCurrentDir) {
       return 0;
     }
 
@@ -475,7 +479,11 @@ Journal::journal(const RequestInfo& reqInfo,
 int
 Journal::purgePaxosDecision(long segmentTxId) {
     string paxosFile = storage.getPaxosFile(segmentTxId);
-    if (file_exists(paxosFile)) {
+    bool hasPaxosFile = false;
+    if(file_exists(paxosFile, hasPaxosFile) !=0 ){
+        return -1;
+    }
+    if (hasPaxosFile) {
       if (file_delete(paxosFile) != 0) {
         LOG.error("Unable to delete paxos file %s", paxosFile.c_str());
         return -1;
@@ -559,10 +567,15 @@ Journal::prepareRecovery(
 int
 Journal::getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized) {
     string paxosFileName = storage.getPaxosFile(segmentTxId);
-    if (!file_exists(paxosFileName)) {
-     // Default instance has no fields filled in (they're optional)
-     isInitialized = false;
-     return 0;
+    bool paxos_file_exists_flag = false;
+
+    if (file_exists(paxosFileName, paxos_file_exists_flag) != 0) {
+        return -1;
+    }
+    if (!paxos_file_exists_flag) {
+        // Default instance has no fields filled in (they're optional)
+        isInitialized = false;
+        return 0;
     }
 
     ifstream in(paxosFileName.c_str(), ios::in | ios::binary);
@@ -612,7 +625,13 @@ Journal::completeHalfDoneAcceptRecovery(
 
     string tmp = storage.getSyncLogTemporaryFile(segmentId, epoch);
 
-    if (file_exists(tmp)) {
+    bool tmp_file_exists_flag = false;
+
+    if(file_exists(tmp, tmp_file_exists_flag) != 0){
+        return -1;
+    }
+
+    if (tmp_file_exists_flag) {
         string dst = storage.getInProgressEditLog(segmentId);
         LOG.info("Rolling forward previously half-completed synchronization: %s -> %s", tmp.c_str(), dst.c_str());
         return file_rename(tmp, dst);

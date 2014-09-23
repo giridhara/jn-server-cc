@@ -76,7 +76,11 @@ FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
     string inProgressFile = getInProgressEditsFile(jnStorage.getCurrentDir(), firstTxId);
     string dstFile = getFinalizedEditsFile(jnStorage.getCurrentDir(), firstTxId, lastTxId);
     LOG.info("Finalizing edits file %s -> %s" , inProgressFile.c_str() , dstFile.c_str() );
-    if (file_exists(dstFile)) {
+    bool finalized_file_exists = false;
+    if(file_exists(dstFile, finalized_file_exists)!=0 ) {
+        return -1;
+    }
+    if (finalized_file_exists) {
         LOG.error("Can't finalize edits file %s since finalized file already exists", dstFile.c_str());
         return -1;
     }

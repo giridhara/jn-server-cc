@@ -85,7 +85,13 @@ class PersistentLongFile {
     int readFile(const string& file, const long& defaultVal, long &result) const {
         long val = defaultVal;
 
-        if(!file_exists(file)){
+        bool file_exists_flag = false;
+
+        if(file_exists(file, file_exists_flag) != 0){
+            return -1;
+        }
+
+        if (!file_exists_flag) {
             result = val;
             return 0;
         }

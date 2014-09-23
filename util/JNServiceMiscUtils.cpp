@@ -18,6 +18,7 @@
 #include "JNServiceMiscUtils.h"
 
 #include <stdlib.h>
+#include "Logger.h"
 
 namespace JournalServiceServer
 {
@@ -71,21 +72,51 @@ string getFinalizedEditsFile(string currentDir,
         getFinalizedEditsFileName(startTxId, endTxId));
 }
 
-const bool file_exists(const string& name) {
-    ifstream ifs (name.c_str());
-    if(!ifs.is_open()) {
-        return false;
+int file_exists(const string& name, bool& file_exists_flag) {
+    bool temp = false;
+
+    try{
+        temp = boost::filesystem::is_regular(name);
+    }catch(const boost::filesystem::filesystem_error& ex){
+        LOG.error("%s", ex.what());
+        return -1;
     }
-    ifs.close();
-    return true;
+    file_exists_flag = temp;
+    return 0;
 }
 
-const int file_rename(const string& from, const string& to ) {
-    return rename(from.c_str(), to.c_str());
+int dir_exists(const string& name, bool& dir_exists_flag) {
+    bool temp = false;
+
+    try{
+        temp = boost::filesystem::is_directory(name);
+    }catch(const boost::filesystem::filesystem_error& ex){
+        LOG.error("%s", ex.what());
+        return -1;
+    }
+    dir_exists_flag = temp;
+    return 0;
 }
 
-const int file_delete(const string& name) {
-    return remove(name.c_str());
+int file_rename(const string& from, const string& to ) {
+    try{
+        boost::filesystem::rename(from, to);
+    }catch(const boost::filesystem::filesystem_error& ex){
+        LOG.error("%s", ex.what());
+        return -1;
+    }
+    return 0;
 }
+
+int file_delete(const string& name) {
+    try{
+        boost::filesystem::remove(name.c_str());
+    }catch(const boost::filesystem::filesystem_error& ex){
+        LOG.error("%s", ex.what());
+        return -1;
+    }
+    return 0;
+}
+
 }
 

@@ -141,7 +141,11 @@ JNStorage::analyzeStorage() {
 //
     // check whether current directory is valid
     string versionFile = getVersionFile();
-    bool hasCurrent = file_exists(versionFile);
+    bool hasCurrent = false;
+
+    if(file_exists(versionFile, hasCurrent) !=0 ){
+        return -1;
+    }
 
     if (hasCurrent) {
         state = NORMAL;

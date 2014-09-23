@@ -29,6 +29,7 @@
 #include <iomanip>
 #include "Constants.h"
 #include <stdio.h>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using std::string;
@@ -48,11 +49,12 @@ string getFinalizedEditsFileName(long startTxId, long endTxId);
 string getFinalizedEditsFile(string currentDir,
     long startTxId, long endTxId);
 
-const bool file_exists(const string& name);
+int file_exists(const string& name, bool& file_exists_flag);
+int dir_exists(const string& name, bool& dir_exists_flag);
 
-const int file_rename(const string& from, const string& to );
+int file_rename(const string& from, const string& to );
 
-const int file_delete(const string& name);
+int file_delete(const string& name);
 
 struct HostPortPair
   {
