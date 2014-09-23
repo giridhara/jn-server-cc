@@ -58,7 +58,7 @@ static int checkStorageInfo(JNStorage& storage, char* storageInfo) {
     return 0;
 }
 
-static void send_reply(struct mg_connection *conn) {
+static int send_reply(struct mg_connection *conn) {
   char jid[100], segmentTxIdArr[100], storageInfo[500];
   if (strcmp(conn->uri, "/getJournal") == 0) {
     // Parse form data. var1 and var2 are guaranteed to be NUL-terminated
@@ -74,7 +74,10 @@ static void send_reply(struct mg_connection *conn) {
 
     int rc = checkStorageInfo(storage, storageInfo);
     if(rc != 0) {
-        return;
+        // 412 - Precondition failed
+        mg_send_status(conn, 412);
+        mg_send_data(conn, "", 0);
+        return MG_TRUE;
     }
 
     char *end;
@@ -84,13 +87,20 @@ static void send_reply(struct mg_connection *conn) {
     EditLogFile elf;
 
     if(fjm.getLogFile(segmentTxId, elf) != 0) {
-        return;
+        // 404- resource not found
+        mg_send_status(conn, 404);
+        mg_send_data(conn, "", 0);
+        return MG_TRUE;
     }
     if(!elf.isInitialized()){
-        return;
+        // 404- resource not found
+        mg_send_status(conn, 404);
+        mg_send_data(conn, "", 0);
+        return MG_TRUE;
     }
 
     mg_send_file(conn, elf.getFile().c_str());
+    return MG_MORE;    // It is important to return MG_MORE after mg_send_file!
   }
 }
 
@@ -99,8 +109,7 @@ ev_handler(struct mg_connection *conn, enum mg_event ev) {
     if (ev == MG_AUTH) {
         return MG_TRUE;   // Authorize all requests
     }else if (ev == MG_REQUEST && !strcmp(conn->uri, "/getJournal")) {
-        send_reply(conn);
-        return MG_MORE;   // It is important to return MG_MORE after mg_send_file!
+        return send_reply(conn);
     }else {
         return MG_FALSE;  // Rest of the events are not processed
     }

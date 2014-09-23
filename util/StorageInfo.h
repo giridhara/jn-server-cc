@@ -34,11 +34,15 @@ public:
         clusterID(cid),
         namespaceID(nsID),
         cTime(cT)
-     {}
+    {}
 
-    StorageInfo() {
-        StorageInfo(0, "", 0, 0);
-    }
+    StorageInfo()
+        :
+        layoutVersion(0),
+        clusterID(""),
+        namespaceID(0),
+        cTime(0)
+    {}
 
     void setStorageInfo(const StorageInfo& from) {
         layoutVersion = from.layoutVersion;
