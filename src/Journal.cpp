@@ -280,6 +280,10 @@ Journal::finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId,
     return 0;
 }
 
+/**
+   * @return the current state of the given segment, or null if the
+   * segment does not exist.
+   */
 int
 Journal::getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized) {
     EditLogFile elf;
@@ -347,7 +351,7 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
     }
 
     // Paranoid sanity check: we should never overwrite a finalized log file.
-    // Additionally, if it's in-progress, it should have at most 1 transaction.
+    // Additionally, if it's in-progress, it should not contain any transactions
     // This can happen if the writer crashes exactly at the start of a segment.
     EditLogFile existing;
     if (fjm.getLogFile(txid, existing) != 0 ) {
@@ -366,7 +370,7 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
         if (existing.scanLog() != 0 ){
             return -1;
         }
-        if (existing.getLastTxId() != existing.getFirstTxId()) {
+        if (existing.getLastTxId() != INVALID_TXID) {
             LOG.error("The log file %s seems to contain valid transactions" , existing.getFile().c_str());
             abort();
         }

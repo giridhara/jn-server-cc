@@ -6,7 +6,8 @@
  */
 
 #include "EditLogFile.h"
-#include "../util/Logger.h"
+#include <util/Logger.h>
+#include <util/JNServiceMiscUtils.h>
 
 namespace JournalServiceServer
 {
@@ -49,7 +50,7 @@ EditLogFile::operator==(const EditLogFile &other) const {
 int
 EditLogFile::renameSelf(string newSuffix) {
      string to = (fullFileName+newSuffix);
-     int rc = rename(fullFileName.c_str(), to.c_str());
+     int rc = file_rename(fullFileName, to);
      if(rc != 0){
          LOG.error("Couldn't rename log %s to %s", fullFileName.c_str(), to.c_str());
          return -1;
