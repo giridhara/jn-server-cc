@@ -18,9 +18,6 @@ namespace JournalServiceServer
 
 Journal::~Journal()
 {
-    //TODO : storage is currently stack variable, hence should not call delete on it
-    // it will get automatically cleared up
-//    delete storage;
     committedTxnId.reset();
     curSegment.reset();
 }

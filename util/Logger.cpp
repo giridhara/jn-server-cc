@@ -20,6 +20,10 @@
 #include <ctime>
 #include <sstream>
 
+#include <sys/time.h>
+#include <sys/resource.h>
+#include "time.h"
+
 // Create a global object LOG which can be used by whoever wants to log
 // messages to a log file
 namespace JournalServiceServer
@@ -79,6 +83,9 @@ namespace JournalServiceServer
   string getCurrentTime()
   {
     time_t t = time(0);   // get time now
+    struct timeval tv;
+    if (gettimeofday(&tv, 0) < 0)
+        return "";
     ostringstream timeStr;
     struct tm * now = localtime( & t );
     timeStr << (now->tm_year + 1900) << '-' 
@@ -86,7 +93,8 @@ namespace JournalServiceServer
       <<  now->tm_mday << '-'
       <<  now->tm_hour << ':'
       <<  now->tm_min  << ':'
-      <<  now->tm_sec  << '\t';
+      <<  now->tm_sec  << ':'
+      <<  tv.tv_usec   << '\t';
     return timeStr.str();
   }
   void

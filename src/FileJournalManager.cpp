@@ -110,7 +110,7 @@ FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
         if (fromTxId <= (*it).getFirstTxId() ||
                 (*it).containsTxId(fromTxId)) {
-            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
+//            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
             ret.push_back(*it);
         }
     }
@@ -133,7 +133,7 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result) 
     vector<EditLogFile > retEditLogFile;
     for (vector<EditLogFile>::iterator it = matchedEditLogs.begin(); it != matchedEditLogs.end(); ++it) {
         if ((*it).getFirstTxId() == startTxId) {
-            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
+//            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
             retEditLogFile.push_back(*it);
         }
     }

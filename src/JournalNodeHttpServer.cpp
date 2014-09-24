@@ -99,6 +99,18 @@ static int send_reply(struct mg_connection *conn) {
         return MG_TRUE;
     }
 
+//    std::ifstream t(elf.getFile().c_str());
+//
+//    std::stringstream buffer;
+//    buffer << t.rdbuf();
+//    t.close();
+////    LOG.info("HTTP SERVER : data read from file is '%s'", buffer.str().c_str());
+//    LOG.info("HTTP SERVER : length of data read from file is %d ",buffer.str().length());
+//    if(elf.isInProgress())
+//        LOG.info("HTTP SERVER : elf is in progress");
+//    else
+//        LOG.info("HTTP SERVER : elf is finalized");
+
     mg_send_file(conn, elf.getFile().c_str());
     return MG_MORE;    // It is important to return MG_MORE after mg_send_file!
   }
@@ -109,6 +121,7 @@ ev_handler(struct mg_connection *conn, enum mg_event ev) {
     if (ev == MG_AUTH) {
         return MG_TRUE;   // Authorize all requests
     }else if (ev == MG_REQUEST && !strcmp(conn->uri, "/getJournal")) {
+        LOG.info("HTTP SERVER : received request to server following file '%s'", conn->query_string);
         return send_reply(conn);
     }else {
         return MG_FALSE;  // Rest of the events are not processed

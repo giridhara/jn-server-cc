@@ -15,6 +15,8 @@
 #include <Ice/Ice.h>
 #include <ice-rpc-cc/src/Server.h>
 #include <ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h>
+#include <util/JournalNodeConfigKeys.h>
+#include <boost/scoped_ptr.hpp>
 
 //forward declaration
 
@@ -35,8 +37,15 @@ public:
         QJournalProtocolProtos::QJournalProtocolPBPtr instance =
                 new JournalServiceServer::QJournalProtocolServerSideTranslatorPB(this);
 
+        string rpcaddress;
+        scoped_ptr<HostPortPair> hpp;
+        hpp.reset(new HostPortPair(DFS_JOURNALNODE_RPC_ADDRESS_DEFAULT));
+        if(!(rpcaddress=conf->getProperty(DFS_JOURNALNODE_RPC_ADDRESS_KEY)).empty()){
+            hpp.reset(new HostPortPair(rpcaddress));
+        }
+
         //TODO :: Giving default values for now for hostname and port address of rpc server
-        server = new icerpc::Server(instance, "QJournalProtocolPB", "localhost", 8485, 1);
+        server = new icerpc::Server(instance, "QJournalProtocolPB", hpp->hostname, hpp->port, 1);
     }
 
     ~JournalNodeRpcServer() {}
