@@ -229,8 +229,7 @@ Journal::finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId,
       }
 
     if (nextTxId != endTxId + 1) {
-        LOG.error("Trying to finalize in-progress log segment %s "
-                  "to end at txid %s but only written up to txid %s",
+        LOG.error("Trying to finalize in-progress log segment %d to end at txid %d but only written up to txid %d",
           startTxId, endTxId, nextTxId - 1);
         return -1;
     }
@@ -255,7 +254,7 @@ Journal::finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId,
                 return -1;
             }
             if(elf.getLastTxId() != endTxId) {
-                LOG.error("Trying to finalize in-progress log segment %s to end at txid %s but log %s on disk only contains up to txid %s",
+                LOG.error("Trying to finalize in-progress log segment %d to end at txid %d but log %s on disk only contains up to txid %d",
                         startTxId, endTxId, elf.getFile().c_str(), elf.getLastTxId());
                 return -1;
             }

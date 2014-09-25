@@ -166,8 +166,39 @@ void testNewEpochAtBeginningOfSegment() {
     cout << "****END OF testNewEpochAtBeginningOfSegment TEST CASE****" << endl;
 }
 
+void testFinalizeWhenEditsAreMissed() {
+    cout << "////BEGINNING TO RUN testFinalizeWhenEditsAreMissed test case////" << endl;
+    Ice::PropertiesPtr conf = Ice::createProperties();
+    Journal* journal = new Journal(conf, LOGDIR, JID);
+
+    NamespaceInfo FAKE_NSINFO(createFakeNSINFO());
+
+    journal->format(FAKE_NSINFO);
+    hadoop::hdfs::NewEpochResponseProto resProto;
+    journal->newEpoch(FAKE_NSINFO, 1, resProto);
+    journal->startLogSegment(makeRI(1), 1, LAYOUTVERSION);
+    journal->journal(makeRI(2), 1, 1, 1, createTransaction(1, TESTDATA));
+    journal->journal(makeRI(3), 1, 2, 1, createTransaction(2, TESTDATA));
+    journal->journal(makeRI(4), 1, 3, 1, createTransaction(3, TESTDATA));
+
+    // Try to finalize up to txn 6, even though we only wrote up to txn 3.
+    assert(journal->finalizeLogSegment(makeRI(5), 1, 6) == -1);
+
+    // Check that, even if we re-construct the journal by scanning the
+    // disk, we don't allow finalizing incorrectly.
+    journal->close();
+    journal = new Journal(conf, LOGDIR, JID);
+    if(journal->isFormatted()) {
+        journal->getStorage().readProperties(journal->getStorage().getVersionFile());
+    }
+
+    assert(journal->finalizeLogSegment(makeRI(6), 1, 6) == -1);
+    cout << "****END OF testFinalizeWhenEditsAreMissed TEST CASE****" << endl;
+}
+
 int main() {
     testRestartJournal();
     testFormatResetsCachedValues();
     testNewEpochAtBeginningOfSegment();
+    testFinalizeWhenEditsAreMissed();
 }

@@ -116,10 +116,13 @@ public:
         return fjm;
     }
     int close() {
-//        storage.close();
-        committedTxnId->close();
-        curSegment->close();
-      }
+//TODO:        storage.close();
+        if(committedTxnId)
+            committedTxnId->close();
+        if(curSegment)
+            curSegment->close();
+        return 0;
+    }
 
 private:
     void refreshCachedData();
