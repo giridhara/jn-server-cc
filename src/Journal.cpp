@@ -86,7 +86,7 @@ Journal::format(const NamespaceInfo& nsInfo) {
         LOG.error("can't format with uninitialized namespace info");
         abort();
     }
-    LOG.info("Formatting journal with namespace info");
+    LOG.info("Formatting journal with namespace info with nsid %d", nsInfo.getNamespaceID());
     int rc = storage.format(nsInfo);
     if(rc != 0)
         return -1;
