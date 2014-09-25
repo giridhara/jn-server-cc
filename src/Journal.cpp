@@ -339,7 +339,7 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
         ostringstream warnMsg;
         // TODO : Below msg is not entirely proper.
         warnMsg << "Client is requesting a new log segment " << txid
-                << "though we are already writing " << ". "
+                << " though we are already writing " << ". "
                 << "Aborting the current segment in order to begin the new one.";
         LOG.warn(warnMsg.str().c_str());
         // The writer may have lost a connection to us and is now

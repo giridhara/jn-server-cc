@@ -12,10 +12,10 @@
 #include <boost/filesystem.hpp>
 #include <sstream>
 #include <fstream>
-#include "../util/StorageInfo.h"
-#include "../util/NamespaceInfo.h"
-#include "../util/Constants.h"
-//#include "../common/Properties.h"
+#include <util/StorageInfo.h>
+#include <util/NamespaceInfo.h>
+#include <util/Constants.h>
+#include <util/JNServiceMiscUtils.h>
 
 //using namespace KFS;
 
@@ -39,9 +39,7 @@ public:
     virtual ~JNStorage() {}
 
     const string getInProgressEditLog(long startTxId) const{
-        ostringstream ostr;
-        ostr << currentDir << "/" << "edits_inprogress_" << startTxId;
-        return ostr.str();
+        return getInProgressEditsFile(currentDir, startTxId);
     }
 
     const string getPaxosFile(long segmentTxId) const {

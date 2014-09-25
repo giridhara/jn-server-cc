@@ -152,5 +152,6 @@ foreach (exe_file ${exe_files})
             pthread
 			boost_filesystem
 			boost_regex
+			gtest
         )
 endforeach (exe_file)

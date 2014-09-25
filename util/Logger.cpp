@@ -35,7 +35,7 @@ namespace JournalServiceServer
     mBufMsgCountMax(10),
     mCurBufMsgCount(0)
   {
-    mFstrm = stdout;
+    mFstrm = stderr;
   }
 
   void
