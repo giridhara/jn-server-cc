@@ -61,17 +61,17 @@ JournalNode::start() {
 }
 }
 
-int main(int argc, char** argv){
-    string progname = "journalnode";
-    if(argc !=2) {
-        cerr << "Usage: " << progname <<
-                       "  <properties file> \n";
-                   return 0;
-    }
-
-    Ice::PropertiesPtr properties = Ice::createProperties();
-    properties->load(argv[1]);
-
-    (JournalServiceServer::global_jn).reset(new JournalServiceServer::JournalNode(properties));
-    JournalServiceServer::global_jn->start();
-}
+//int main(int argc, char** argv){
+//    string progname = "journalnode";
+//    if(argc !=2) {
+//        cerr << "Usage: " << progname <<
+//                       "  <properties file> \n";
+//                   return 0;
+//    }
+//
+//    Ice::PropertiesPtr properties = Ice::createProperties();
+//    properties->load(argv[1]);
+//
+//    (JournalServiceServer::global_jn).reset(new JournalServiceServer::JournalNode(properties));
+//    JournalServiceServer::global_jn->start();
+//}

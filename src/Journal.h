@@ -115,6 +115,11 @@ public:
     FileJournalManager& getFileJournalManager(){
         return fjm;
     }
+    int close() {
+//        storage.close();
+        committedTxnId->close();
+        curSegment->close();
+      }
 
 private:
     void refreshCachedData();

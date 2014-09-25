@@ -111,6 +111,7 @@ src/JournalNodeHttpServer.cpp
 src/JournalNodeRpcServer.cpp
 src/EditLogFile.cpp
 src/JNClientOutputStream.cpp
+src/TestJNClientOutputStream.cpp
 src/JNClientInputStream.cpp
 src/Journal.cpp
 util/Logger.cpp
@@ -134,10 +135,11 @@ endif (NOT REQUIRED_LIBRARIES)
 set(CMAKE_REQUIRED_LIBRARIES "$CMAKE_REQUIRED_LIBRARIES" "$REQUIRED_LIBRARIES")
 
 
-set (exe_files JournalNode)
+set (exe_files TestJournal)
 foreach (exe_file ${exe_files})
     add_executable (${exe_file}
-            src/${exe_file}.cpp
+            test/${exe_file}.cpp
+			src/JournalNode.cpp
             ${journalservice_files}
 			${protoSrcs}
 			${iceSrcs}

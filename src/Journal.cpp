@@ -11,6 +11,7 @@
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
+#include <curlpp/Infos.hpp>
 #include <fstream>
 
 namespace JournalServiceServer
@@ -885,24 +886,28 @@ Journal::syncLog(const RequestInfo& reqInfo,
         segment.starttxid(), reqInfo.getEpoch());
 
     ofstream os(tmpFile.c_str());
-    bool success= false;
+    int responseCode= -1;
     try{
+        // That's all that is needed to do cleanup of used resources (RAII style).
+        curlpp::Cleanup cleaner;
         curlpp::Easy myRequest;
         curlpp::options::WriteStream ws(&os);
         myRequest.setOpt(new curlpp::options::Url(url));
         myRequest.setOpt(ws);
         myRequest.perform();
         os.close();
-        success = true;
+        responseCode = curlpp::infos::ResponseCode::get(myRequest);
     }catch(...){
         os.close();
-        if(!success){
-            LOG.warn("unable to download file %s from url %s", tmpFile.c_str(), url.c_str());
-            file_delete(tmpFile);
-            return -1;
-        }
+        LOG.error("exception raised while trying to download file %s from url %s", tmpFile.c_str(), url.c_str());
     }
-    ret = tmpFile;
+    if (responseCode == 200) {
+        ret = tmpFile;
+    }else {
+        LOG.error("unable to download file %s from url %s", tmpFile.c_str(), url.c_str());
+        file_delete(tmpFile);
+        return -1;
+    }
     return 0;
 }
 

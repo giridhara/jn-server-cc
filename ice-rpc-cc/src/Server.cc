@@ -42,8 +42,8 @@ Server::createConfigFile(){
 //    # 1 = trace protocol messages
 //    #
 //    Ice.Trace.Protocol=1
-    myfile << "Ice.Trace.Network=3" << "\n";
-    myfile << "Ice.Trace.Protocol=1" << "\n";
+//    myfile << "Ice.Trace.Network=3" << "\n";
+//    myfile << "Ice.Trace.Protocol=1" << "\n";
 
     myfile.close();
     return 0;
