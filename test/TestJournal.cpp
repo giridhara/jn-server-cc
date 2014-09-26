@@ -62,6 +62,51 @@ NamespaceInfo createFakeNSINFO_2(){
     return nsInfo;
 }
 
+  /**
+   * Test whether JNs can correctly handle editlog that cannot be decoded.
+   */
+TEST(TestJournal, testScanEditLog) {
+    Ice::PropertiesPtr conf = Ice::createProperties();
+    Journal* journal = new Journal(conf, LOGDIR, JID);
+
+    NamespaceInfo FAKE_NSINFO(createFakeNSINFO());
+
+    journal->format(FAKE_NSINFO);
+
+    // use a future layout version
+    journal->startLogSegment(makeRI(1), 1, LAYOUTVERSION);
+
+    // in the segment we write garbage editlog, which can be scanned but
+    // cannot be decoded
+    int numTxns = 5;
+    journal->journal(makeRI(2), 1, 1, 1, createTransaction(1, TESTDATA));
+    journal->journal(makeRI(3), 1, 2, 1, createTransaction(2, TESTDATA));
+    journal->journal(makeRI(4), 1, 3, 1, createTransaction(3, TESTDATA));
+    journal->journal(makeRI(5), 1, 4, 1, createTransaction(4, TESTDATA));
+    journal->journal(makeRI(6), 1, 5, 1, createTransaction(5, TESTDATA));
+
+    // verify the in-progress editlog segment
+    bool isSegmentInitialized = false;
+
+    hadoop::hdfs::SegmentStateProto segmentState;
+    journal->getSegmentInfo(1, segmentState, isSegmentInitialized);
+
+    ASSERT_EQ(true, isSegmentInitialized);
+    ASSERT_EQ(true, segmentState.isinprogress());
+    ASSERT_EQ(numTxns, segmentState.endtxid());
+    ASSERT_EQ(1, segmentState.starttxid());
+
+    // finalize the segment and verify it again
+    journal->finalizeLogSegment(makeRI(7), 1, numTxns);
+    segmentState.Clear();
+    isSegmentInitialized = false;
+    journal->getSegmentInfo(1, segmentState, isSegmentInitialized);
+    ASSERT_EQ(true, isSegmentInitialized);
+    ASSERT_EQ(false, segmentState.isinprogress());
+    ASSERT_EQ(numTxns, segmentState.endtxid());
+    ASSERT_EQ(1, segmentState.starttxid());
+}
+
 TEST(TestJournal, testEpochHandling){
     Ice::PropertiesPtr conf = Ice::createProperties();
     Journal* journal = new Journal(conf, LOGDIR, JID);

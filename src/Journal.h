@@ -124,6 +124,9 @@ public:
         return 0;
     }
 
+    // TODO : Making getSegmentInfo public just for testing purpose
+    int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
+
 private:
     void refreshCachedData();
 
@@ -140,7 +143,7 @@ private:
     int checkRequest(const RequestInfo& reqInfo);
     int checkWriteRequest(const RequestInfo& reqInfo);
 
-    int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
+//    int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
 
     int purgePaxosDecision(long segmentTxId);
     int getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized);

@@ -42,7 +42,7 @@ JNClientInputStream::scanLog(string& filename, long& lastTxId, bool& hasHeaderCo
     std::stringstream buffer;
     buffer << t.rdbuf();
     cout << "data read from file is '" << buffer.str() << "'" << endl;
-    cout << "length of data read from file is " << buffer.str().length() << endl;
+    LOG.debug("length of data read from file is %d", buffer.str().length());
     JNClientInputStream in(buffer.str());
     t.close();
     if (in.mCurPosition == 0) {
@@ -95,6 +95,12 @@ JNClientInputStream::scanOp(long& ret) {
         ret = INVALID_TXID;
         return -1;
     }
+    if(opcode != OPCODE){
+        LOG.error("Error while parsing transaction logs to get opcode, found %d but expected %d", opcode, OPCODE);
+        ret = INVALID_TXID;
+        return -1;
+    }
+
     int length;
     if (readInt(length) != 0) {  // read the length of the op
         LOG.error("Error while parsing transaction logs, obtained wrong length");
