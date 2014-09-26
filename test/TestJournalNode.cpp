@@ -53,6 +53,47 @@ string createTransaction(const seq_t txId, const string data) {
     return str;
 }
 
+TEST(TestJournalNode, testReturnsSegmentInfoAtEpochTransition) {
+    (JournalServiceServer::global_jn).reset(new JournalServiceServer::JournalNode(properties));
+    JournalServiceServer::global_jn->start();
+    Journal* journal;
+    global_jn->getOrCreateJournal(JID, journal);
+    NamespaceInfo FAKE_NSINFO(createFakeNSINFO());
+    journal->format(FAKE_NSINFO);
+    JournalNodeRpcServer* rpcServer = global_jn->getJNRPCServer();
+
+    hadoop::hdfs::NewEpochResponseProto epochResp;
+    rpcServer->newEpoch(JID, FAKE_NSINFO, 1, epochResp);
+    rpcServer->startLogSegment(makeRI(1), 1, LAYOUTVERSION);
+    rpcServer->journal(makeRI(2), 1, 1, 1, createTransaction(1, TESTDATA));
+    rpcServer->journal(makeRI(3), 1, 2, 1, createTransaction(2, TESTDATA));
+
+    // Switch to a new epoch without closing earlier segment
+    epochResp.Clear();
+    rpcServer->newEpoch(JID, FAKE_NSINFO, 2, epochResp);
+    ASSERT_EQ(1, epochResp.lastsegmenttxid());
+
+    rpcServer->finalizeLogSegment(makeRI(4), 1, 2);
+
+    // Switch to a new epoch after just closing the earlier segment.
+    epochResp.Clear();
+    rpcServer->newEpoch(JID, FAKE_NSINFO, 3, epochResp);
+    ASSERT_EQ(1, epochResp.lastsegmenttxid());
+
+    // Start a segment but don't write anything, check newEpoch segment info
+    rpcServer->startLogSegment(makeRI(5), 3, LAYOUTVERSION);
+    epochResp.Clear();
+    rpcServer->newEpoch(JID, FAKE_NSINFO, 4, epochResp);
+
+    // Because the new segment is empty, it is equivalent to not having
+    // started writing it. Hence, we should return the prior segment txid.
+    ASSERT_EQ(1, epochResp.lastsegmenttxid());
+}
+
+/**
+   * Test that the JournalNode performs correctly as a Paxos
+   * <em>Acceptor</em> process.
+*/
 TEST(TestJournalNode, testAcceptRecoveryBehavior) {
     (JournalServiceServer::global_jn).reset(new JournalServiceServer::JournalNode(properties));
     JournalServiceServer::global_jn->start();
