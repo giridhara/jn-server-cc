@@ -72,7 +72,6 @@ private:
     JournalNode&  jn;
     Ice::PropertiesPtr conf;
     icerpc::Server* server;
-
 };
 
 } /* namespace JournalServiceServer */

@@ -65,6 +65,12 @@ public:
     void start();
 
     int getOrCreateJournal(const string& jid, Journal*& journal);
+
+    //TODO : Added this function only for testing purpose
+    JournalNodeRpcServer* getJNRPCServer() {
+        return rpcServer;
+    }
+
 private:
     int getLogDir(const string& jid, string& logDir);
 

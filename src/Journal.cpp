@@ -537,6 +537,7 @@ Journal::prepareRecovery(
                     segInfo.starttxid(),segInfo.endtxid());
             abort();
         }
+        LOG.debug("using previously persisted recovery paxos data");
         ret.set_acceptedinepoch(previouslyAccepted.acceptedinepoch());
         ret.set_allocated_segmentstate(new hadoop::hdfs::SegmentStateProto(acceptedState));
     }else {

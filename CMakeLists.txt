@@ -135,7 +135,7 @@ endif (NOT REQUIRED_LIBRARIES)
 set(CMAKE_REQUIRED_LIBRARIES "$CMAKE_REQUIRED_LIBRARIES" "$REQUIRED_LIBRARIES")
 
 
-set (exe_files TestJournal)
+set (exe_files TestJournal TestJournalNode)
 foreach (exe_file ${exe_files})
     add_executable (${exe_file}
             test/${exe_file}.cpp

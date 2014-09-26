@@ -57,7 +57,8 @@ JournalNode::start() {
     JournalNodeHttpServer::start_httpserver(ostr.str());
 
     rpcServer = new JournalNodeRpcServer(conf, *this);
-    rpcServer->start();
+    //TODO : Commented out only for testing purpose. Uncomment once you are done
+//    rpcServer->start();
 }
 }
 
