@@ -702,12 +702,12 @@ Journal::getEditLogManifest(const long sinceTxId, const bool inProgressOk, vecto
     }
 
     if (inProgressOk) {
-      EditLogFile* log = 0;
+      EditLogFile log;
       vector<EditLogFile>::iterator iter = temp.begin();
       while (iter != temp.end())
       {
-          log = &(*iter);
-          if(log->isInProgress()){
+          log = *iter;
+          if(log.isInProgress()){
               // erase returns the new iterator
               iter = temp.erase(iter);
               break;
@@ -715,8 +715,8 @@ Journal::getEditLogManifest(const long sinceTxId, const bool inProgressOk, vecto
               ++iter;
           }
       }
-      if (log != 0 && log->isInProgress()) {
-          EditLogFile elf(" ", log->getFirstTxId(), getHighestWrittenTxId(), true);
+      if (log.isInitialized() && log.isInProgress()) {
+          EditLogFile elf(" ", log.getFirstTxId(), getHighestWrittenTxId(), false);
         temp.push_back(elf);
       }
     }
