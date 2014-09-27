@@ -134,11 +134,9 @@ endif (NOT REQUIRED_LIBRARIES)
 
 set(CMAKE_REQUIRED_LIBRARIES "$CMAKE_REQUIRED_LIBRARIES" "$REQUIRED_LIBRARIES")
 
-
-set (exe_files TestJournal TestJournalNode)
+set (exe_files JournalNode)
 foreach (exe_file ${exe_files})
     add_executable (${exe_file}
-            test/${exe_file}.cpp
 			src/JournalNode.cpp
             ${journalservice_files}
 			${protoSrcs}
@@ -155,3 +153,24 @@ foreach (exe_file ${exe_files})
 			gtest
         )
 endforeach (exe_file)
+
+#set (exe_files TestJournal TestJournalNode)
+#foreach (exe_file ${exe_files})
+#    add_executable (${exe_file}
+#            test/${exe_file}.cpp
+#			src/JournalNode.cpp
+#            ${journalservice_files}
+#			${protoSrcs}
+#			${iceSrcs}
+#       )
+#        target_link_libraries (${exe_file}
+#            IceUtil
+#            Ice
+#            protobuf
+#            curlpp
+#            pthread
+#			boost_filesystem
+#			boost_regex
+#			gtest
+#        )
+#endforeach (exe_file)

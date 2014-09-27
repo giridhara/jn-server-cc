@@ -30,8 +30,6 @@ Journal::~Journal()
    */
 void
 Journal::refreshCachedData() {
-    //TODO : this function is not complete
-    //IOUtils.closeStream(committedTxnId);
     const string currentDir(storage.getCurrentDir());
     lastPromisedEpoch.reset(new PersistentLongFile(currentDir+ "/" +  LAST_PROMISED_FILENAME, 0));
     lastWriterEpoch.reset(new PersistentLongFile(currentDir + "/" + LAST_WRITER_EPOCH, 0));

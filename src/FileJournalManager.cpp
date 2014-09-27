@@ -42,13 +42,13 @@ FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgres
     }
 
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
-        if((*it).hasCorruptHeader() || (!inProgressOk && (*it).isInProgress())) {
+        if(it->hasCorruptHeader() || (!inProgressOk && it->isInProgress())) {
             continue;
         }
-        EditLogFile elf(" ", (*it).getFirstTxId(), (*it).getLastTxId(), false);
-        if((*it).getFirstTxId() >= firstTxId) {
+        EditLogFile elf(" ", it->getFirstTxId(), it->getLastTxId(), it->isInProgress());
+        if(it->getFirstTxId() >= firstTxId) {
             ret.push_back(elf);
-        } else if((*it).getFirstTxId() < firstTxId && firstTxId <= (*it).getLastTxId()) {
+        } else if(it->getFirstTxId() < firstTxId && firstTxId <= it->getLastTxId()) {
             // If the firstTxId is in the middle of an edit log segment. Return this
             // anyway and let the caller figure out whether it wants to use it.
             ret.push_back(elf);
@@ -132,7 +132,7 @@ FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result) 
     }
     vector<EditLogFile > retEditLogFile;
     for (vector<EditLogFile>::iterator it = matchedEditLogs.begin(); it != matchedEditLogs.end(); ++it) {
-        if ((*it).getFirstTxId() == startTxId) {
+        if (it->getFirstTxId() == startTxId) {
 //            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
             retEditLogFile.push_back(*it);
         }
