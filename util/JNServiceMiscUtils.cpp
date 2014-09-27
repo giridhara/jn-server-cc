@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include "Logger.h"
+#include <unistd.h>
 
 namespace JournalServiceServer
 {
@@ -102,6 +103,7 @@ int file_rename(const string& from, const string& to ) {
     try{
         boost::filesystem::rename(from, to);
     }catch(const boost::filesystem::filesystem_error& ex){
+        LOG.error("could not rename %s -> %s", from.c_str(), to.c_str());
         LOG.error("%s", ex.what());
         return -1;
     }
@@ -116,6 +118,37 @@ int file_delete(const string& name) {
         return -1;
     }
     return 0;
+}
+
+/**
+ * Move the src file to the name specified by target.
+ * @param src the source file
+ * @param target the target file
+ * @exception IOException If this operation fails
+ */
+int replaceFile(const string& src, const string& target) {
+  /* renameTo() has two limitations on Windows platform.
+   * src.renameTo(target) fails if
+   * 1) If target already exists OR
+   * 2) If target is already open for reading/writing.
+   */
+    int numRetries = 5;
+    while (numRetries-- > 0) {
+        bool target_exists = false;
+        try{
+            file_exists(target, target_exists);
+            if(!target_exists) break;
+            if(file_delete(target) == 0) {
+                break;
+            }
+            usleep(1*1000*1000);
+        }catch(const boost::filesystem::filesystem_error& ex){
+            if(numRetries <= 0) {
+                break;
+            }
+        }
+    }
+    return file_rename(src, target);
 }
 
 }

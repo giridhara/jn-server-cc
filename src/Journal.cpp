@@ -634,7 +634,7 @@ Journal::completeHalfDoneAcceptRecovery(
     if (tmp_file_exists_flag) {
         string dst = storage.getInProgressEditLog(segmentId);
         LOG.info("Rolling forward previously half-completed synchronization: %s -> %s", tmp.c_str(), dst.c_str());
-        return file_rename(tmp, dst);
+        return replaceFile(tmp, dst);
     }
 
     return 0;
@@ -860,7 +860,7 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
     }
 
     if (!syncedFile.empty()) {
-      if( file_rename(syncedFile, storage.getInProgressEditLog(segmentTxId)) != 0 ){
+      if( replaceFile(syncedFile, storage.getInProgressEditLog(segmentTxId)) != 0 ){
           return -1;
       }
     }
@@ -883,6 +883,8 @@ Journal::syncLog(const RequestInfo& reqInfo,
     string tmpFile = storage.getSyncLogTemporaryFile(
         segment.starttxid(), reqInfo.getEpoch());
 
+    LOG.debug("trying to download edit log segment from url : %s", url.c_str());
+
     ofstream os(tmpFile.c_str());
     int responseCode= -1;
     try{
@@ -900,6 +902,7 @@ Journal::syncLog(const RequestInfo& reqInfo,
         LOG.error("exception raised while trying to download file %s from url %s", tmpFile.c_str(), url.c_str());
     }
     if (responseCode == 200) {
+        LOG.debug("successfully downloaded edit log segment from url : %s", url.c_str());
         ret = tmpFile;
     }else {
         LOG.error("unable to download file %s from url %s", tmpFile.c_str(), url.c_str());

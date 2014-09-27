@@ -53,6 +53,7 @@ int file_exists(const string& name, bool& file_exists_flag);
 int dir_exists(const string& name, bool& dir_exists_flag);
 
 int file_rename(const string& from, const string& to );
+int replaceFile(const string& src, const string& target);
 
 int file_delete(const string& name);
 
