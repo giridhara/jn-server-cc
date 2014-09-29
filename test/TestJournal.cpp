@@ -331,27 +331,28 @@ TEST(TestJournal, testStartLogSegmentWhenAlreadyExists) {
 
     // Start a segment at txid 1
     journal->startLogSegment(makeRI(1), 1, LAYOUTVERSION);
+    journal->journal(makeRI(2), 1, 1, 1, createTransaction(1, TESTDATA));
 
     // Try to start new segment at txid 1, this should succeed, because
     // we are allowed to re-start a segment if segment is empty
-    ASSERT_EQ(journal->startLogSegment(makeRI(2), 1,
+    ASSERT_EQ(journal->startLogSegment(makeRI(3), 1,
         LAYOUTVERSION), 0);
-    journal->journal(makeRI(3), 1, 1, 1, createTransaction(1, TESTDATA));
+    journal->journal(makeRI(4), 1, 1, 1, createTransaction(1, TESTDATA));
 
     // This time through, write more transactions afterwards, simulating
     // real user transactions.
-    journal->journal(makeRI(4), 1, 2, 1, createTransaction(2, TESTDATA));
-    journal->journal(makeRI(5), 1, 3, 1, createTransaction(3, TESTDATA));
-    journal->journal(makeRI(6), 1, 4, 1, createTransaction(4, TESTDATA));
+    journal->journal(makeRI(5), 1, 2, 1, createTransaction(2, TESTDATA));
+    journal->journal(makeRI(6), 1, 3, 1, createTransaction(3, TESTDATA));
+    journal->journal(makeRI(7), 1, 4, 1, createTransaction(4, TESTDATA));
 
     // This should fail
-    ASSERT_DEATH( journal->startLogSegment(makeRI(7), 1,
+    ASSERT_DEATH( journal->startLogSegment(makeRI(8), 1,
           LAYOUTVERSION), "seems to contain valid transactions");
 
-    journal->finalizeLogSegment(makeRI(8), 1, 4);
+    journal->finalizeLogSegment(makeRI(9), 1, 4);
 
     // Ensure that we cannot overwrite a finalized segment
-    ASSERT_DEATH(journal->startLogSegment(makeRI(9), 1, LAYOUTVERSION), "have a finalized segment" );
+    ASSERT_DEATH(journal->startLogSegment(makeRI(10), 1, LAYOUTVERSION), "have a finalized segment" );
 }
 
 TEST(TestJournal, testNamespaceVerification){
