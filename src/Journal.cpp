@@ -67,7 +67,9 @@ Journal::scanStorageForLatestEdits(EditLogFile& ret) {
         if(latestLog.getLastTxId() == INVALID_TXID) {
             LOG.warn("Latest log %s has no transactions. moving it aside and looking for previous log",
                     latestLog.getFile().c_str());
-            latestLog.moveAsideEmptyFile();
+            if(latestLog.moveAsideEmptyFile() != 0){
+                return -1;
+            }
         }else {
             ret = latestLog;
             return 0;
@@ -94,6 +96,7 @@ Journal::format(const NamespaceInfo& nsInfo) {
 
 int
 Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret) {
+    LOG.info("Received newEpoch request with epoch numner %d", epoch);
     if(checkFormatted() != 0) {
         return -1;
     }
@@ -322,6 +325,7 @@ Journal::getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, 
 int
 Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
       const int layoutVersion) {
+    LOG.info("Received request to start log segment from txid : %d", txid);
     //TODO : Have to implement below assert.
     //assert fjm != null;
 
@@ -329,9 +333,13 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
         return -1;
     }
 
+    LOG.info("Done with check Formatted function");
+
     if (checkRequest(reqInfo) != 0) {
         return -1;
     }
+
+    LOG.info("Done with check Request function");
 
     if (curSegment) {
         ostringstream warnMsg;
@@ -365,13 +373,15 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
         // If it's in-progress, it should only contain one transaction,
         // because the "startLogSegment" transaction is written alone at the
         // start of each segment.
-        if (existing.scanLog() != 0 ){
+        if (existing.scanLog() != 0 ) {
             return -1;
         }
-        if (existing.getLastTxId() != INVALID_TXID) {
+        if (existing.getLastTxId() != existing.getFirstTxId()) {
             LOG.error("The log file %s seems to contain valid transactions" , existing.getFile().c_str());
             abort();
         }
+    }else {
+        LOG.info("There is no segment starting at txid : %d", txid);
     }
 
     long curLastWriterEpoch;
@@ -776,6 +786,11 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
     getSegmentInfo(segmentTxId, currentSegment, isCurrentSegmentInitialized);
     if (!isCurrentSegmentInitialized ||
         currentSegment.endtxid() != segment.endtxid()) {
+        if (!isCurrentSegmentInitialized)
+            LOG.info("curSegmentStateProto is not initialized");
+        else {
+            LOG.info("on disk end txid is %d different from endTxid in request %d", currentSegment.endtxid(), segment.endtxid());
+        }
       if (!isCurrentSegmentInitialized) {
         LOG.info("Synchronizing log [%d, %d]  : no current segment in place", segment.starttxid(), segment.endtxid());
 

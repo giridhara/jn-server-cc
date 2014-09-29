@@ -103,7 +103,6 @@ int file_rename(const string& from, const string& to ) {
     try{
         boost::filesystem::rename(from, to);
     }catch(const boost::filesystem::filesystem_error& ex){
-        LOG.error("could not rename %s -> %s", from.c_str(), to.c_str());
         LOG.error("%s", ex.what());
         return -1;
     }

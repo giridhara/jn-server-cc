@@ -63,6 +63,7 @@ public:
         refreshCachedData();
 
         EditLogFile latest;
+        LOG.info("calling scanStorageLatestEdits from inside constructor of Journal");
         if(scanStorageForLatestEdits(latest) != 0) {
             if (latest.isInitialized()) {
                 highestWrittenTxId = latest.getLastTxId();
