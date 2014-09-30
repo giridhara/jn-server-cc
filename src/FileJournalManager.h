@@ -15,6 +15,8 @@
 #include <iostream>
 #include "JNClientOutputStream.h"
 #include "boost/scoped_ptr.hpp"
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 using std::vector;
 using std::string;
@@ -40,21 +42,18 @@ public:
     int getLogFiles(long fromTxId, vector<EditLogFile>& ret);
     int getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret);
     int getLogFile(long startTxId, EditLogFile&);
-    int getLogFile(string dir, long startTxId, EditLogFile&);
-
-    int matchEditLogs(const string& dir, vector<EditLogFile> & ret );
-
-    int matchEditLogs(const string& dir, const vector<string>& filesInStorage, vector<EditLogFile>& ret);
-
     int finalizeLogSegment(long firstTxId, long lastTxId);
     int startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>&);
 
-    int GetFilesInDirectory(const string& directory, vector<string> &out);
-
 private:
+    int getLogFile(string dir, long startTxId, EditLogFile&);
+    int GetFilesInDirectory(const string& directory, vector<string> &out);
+    int matchEditLogs(const string& dir, vector<EditLogFile> & ret );
+    int matchEditLogs(const string& dir, const vector<string>& filesInStorage, vector<EditLogFile>& ret);
 
     JNStorage& jnStorage;
     string currentInProgress;
+    boost::recursive_mutex mMutex;
 };
 
 } /* namespace JournalServiceServer */

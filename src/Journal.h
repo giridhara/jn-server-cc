@@ -11,7 +11,6 @@
 #include <string>
 #include "FileJournalManager.h"
 #include "JNStorage.h"
-//#include "../common/Properties.h"
 #include "../util/Constants.h"
 #include "../util/PersistentLongFile.h"
 #include "../util/BestEffortLongFile.h"
@@ -22,6 +21,8 @@
 #include <QJournalProtocolPB.h>
 #include <Ice/Ice.h>
 #include <ice-rpc-cc/src/Server.h>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 //#include <fstream>
 
@@ -53,7 +54,6 @@ public:
           committedTxnId(),
           fjm(storage),
           conf(conf)
-
     {
         curSegment.reset(0);
         lastPromisedEpoch.reset(0);
@@ -73,26 +73,20 @@ public:
     virtual ~Journal();
 
     int getLastPromisedEpoch(long& ret){
+        boost::recursive_mutex::scoped_lock lock(mMutex);
         checkFormatted();
         // get function below modifies argument only on successful execution
         return lastPromisedEpoch->get(ret);
       }
 
     int getLastWriterEpoch(long& ret) {
+        boost::recursive_mutex::scoped_lock lock(mMutex);
         checkFormatted();
         return lastWriterEpoch->get(ret);
     }
 
-//      synchronized long getCurrentLagTxns() throws IOException {
-//        long committed = committedTxnId.get();
-//        if (committed == 0) {
-//          return 0;
-//        }
-//
-//        return Math.max(committed - highestWrittenTxId, 0L);
-//      }
-
     long getHighestWrittenTxId() {
+        boost::recursive_mutex::scoped_lock lock(mMutex);
         return highestWrittenTxId;
     }
 
@@ -107,6 +101,7 @@ public:
     int acceptRecovery(const RequestInfo& reqInfo, const hadoop::hdfs::SegmentStateProto& segment, const string& fromUrl);
     int getEditLogManifest(const long sinceTxId, const bool inProgressOk, vector<EditLogFile>& ret);
     bool isFormatted() {
+        boost::recursive_mutex::scoped_lock lock(mMutex);
         return storage.isFormatted();
     }
     JNStorage& getStorage() {
@@ -226,6 +221,9 @@ private:
 
     FileJournalManager fjm;
     Ice::PropertiesPtr conf;
+
+    boost::recursive_mutex mMutex;
+
 };
 
 } /* namespace JournalServiceServer */

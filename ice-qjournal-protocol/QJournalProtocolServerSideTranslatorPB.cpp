@@ -6,7 +6,6 @@
  */
 
 #include "QJournalProtocolServerSideTranslatorPB.h"
-#include "../common/commons.h"
 
 namespace JournalServiceServer
 {

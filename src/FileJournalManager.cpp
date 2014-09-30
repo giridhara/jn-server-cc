@@ -61,6 +61,7 @@ FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgres
 
 int
 FileJournalManager::startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>& ret) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     currentInProgress = getInProgressEditsFile(jnStorage.getCurrentDir(), txid);
     ret.reset(new JNClientOutputStream(currentInProgress));
 
@@ -73,6 +74,7 @@ FileJournalManager::startLogSegment(long txid, int layoutVersion, scoped_ptr<JNC
 
 int
 FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     string inProgressFile = getInProgressEditsFile(jnStorage.getCurrentDir(), firstTxId);
     string dstFile = getFinalizedEditsFile(jnStorage.getCurrentDir(), firstTxId, lastTxId);
     LOG.info("Finalizing edits file %s -> %s" , inProgressFile.c_str() , dstFile.c_str() );
@@ -100,6 +102,7 @@ FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
 
 int
 FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     cout << "getting all logs from txid : " << fromTxId << endl;
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
@@ -121,6 +124,7 @@ FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
 
 int
 FileJournalManager::getLogFile(long startTxId, EditLogFile& ret) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     return getLogFile(jnStorage.getCurrentDir(), startTxId, ret);
 }
 

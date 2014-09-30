@@ -30,6 +30,7 @@ Journal::~Journal()
    */
 void
 Journal::refreshCachedData() {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     const string currentDir(storage.getCurrentDir());
     lastPromisedEpoch.reset(new PersistentLongFile(currentDir+ "/" +  LAST_PROMISED_FILENAME, 0));
     lastWriterEpoch.reset(new PersistentLongFile(currentDir + "/" + LAST_WRITER_EPOCH, 0));
@@ -45,6 +46,7 @@ Journal::refreshCachedData() {
 //call isInitialized function on 'ret' before using it
 int
 Journal::scanStorageForLatestEdits(EditLogFile& ret) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     bool hasCurrentDir = false;
     if(dir_exists(storage.getCurrentDir(), hasCurrentDir) !=0 ){
         return -1;
@@ -97,6 +99,7 @@ Journal::format(const NamespaceInfo& nsInfo) {
 int
 Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret) {
     LOG.info("Received newEpoch request with epoch numner %d", epoch);
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     if(checkFormatted() != 0) {
         return -1;
     }
@@ -145,6 +148,7 @@ Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochRespo
 */
 int
 Journal::checkRequest(const RequestInfo& reqInfo) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     // Invariant 25 from ZAB paper
     long lpe;
     if(lastPromisedEpoch->get(lpe) != 0)
@@ -188,6 +192,7 @@ Journal::checkRequest(const RequestInfo& reqInfo) {
 
 int
 Journal::checkWriteRequest(const RequestInfo& reqInfo) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     if(checkRequest(reqInfo)!=0) {
         return -1;
     }
@@ -211,6 +216,7 @@ Journal::checkWriteRequest(const RequestInfo& reqInfo) {
 int
 Journal::finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId,
       const long endTxId) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     if(checkFormatted() != 0 ) {
         return -1;
     }
@@ -326,6 +332,7 @@ int
 Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
       const int layoutVersion) {
     LOG.info("Received request to start log segment from txid : %d", txid);
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     //TODO : Have to implement below assert.
     //assert fjm != null;
 
@@ -417,8 +424,8 @@ int
 Journal::journal(const RequestInfo& reqInfo,
       long segmentTxId, long firstTxnId,
       int numTxns, const string& records) {
-
     LOG.debug("Received request from client to persist following record '%s'", records.c_str());
+    boost::recursive_mutex::scoped_lock lock(mMutex);
 
     if(checkFormatted() != 0 ) {
         return -1;
@@ -507,6 +514,7 @@ Journal::purgePaxosDecision(long segmentTxId) {
 int
 Journal::prepareRecovery(
     const RequestInfo& reqInfo, const long segmentTxId, hadoop::hdfs::PrepareRecoveryResponseProto& ret){
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     if(checkFormatted() != 0 ) {
         return -1;
     }
@@ -742,6 +750,7 @@ Journal::getEditLogManifest(const long sinceTxId, const bool inProgressOk, vecto
 int
 Journal::acceptRecovery(const RequestInfo& reqInfo,
       const hadoop::hdfs::SegmentStateProto& segment, const string& fromUrl) {
+    boost::recursive_mutex::scoped_lock lock(mMutex);
     if(checkFormatted() != 0 ) {
         return -1;
     }

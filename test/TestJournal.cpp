@@ -329,12 +329,14 @@ TEST(TestJournal, testStartLogSegmentWhenAlreadyExists) {
     hadoop::hdfs::NewEpochResponseProto resProto;
     journal->newEpoch(FAKE_NSINFO, 1, resProto);
 
-    // Start a segment at txid 1
+    // Start a segment at txid 1, and write just 1 transaction. This
+    // would normally be the 'version/1' transaction.
     journal->startLogSegment(makeRI(1), 1, LAYOUTVERSION);
     journal->journal(makeRI(2), 1, 1, 1, createTransaction(1, TESTDATA));
 
     // Try to start new segment at txid 1, this should succeed, because
-    // we are allowed to re-start a segment if segment is empty
+    // we are allowed to re-start a segment if we only ever had the
+    // 'version/1' transaction logged.
     ASSERT_EQ(journal->startLogSegment(makeRI(3), 1,
         LAYOUTVERSION), 0);
     journal->journal(makeRI(4), 1, 1, 1, createTransaction(1, TESTDATA));
