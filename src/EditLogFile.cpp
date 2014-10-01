@@ -48,7 +48,7 @@ EditLogFile::operator==(const EditLogFile &other) const {
 }
 
 int
-EditLogFile::renameSelf(string newSuffix) {
+EditLogFile::renameSelf(const string& newSuffix) {
      string to = (fullFileName+newSuffix);
      int rc = replaceFile(fullFileName, to);
      if(rc != 0){

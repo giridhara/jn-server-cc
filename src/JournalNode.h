@@ -55,7 +55,7 @@ public:
         httpPort = hpp.port;
         cout << "httpPort being used is " << httpPort;
     }
-    virtual ~JournalNode() {}
+    virtual ~JournalNode();
     string getHttpServerURI() {
        return httpServerURI;
     }

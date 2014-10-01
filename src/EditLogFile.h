@@ -110,7 +110,7 @@ public:
        return renameSelf(".empty");
    }
 
-   int renameSelf(string newSuffix);
+   int renameSelf(const string& newSuffix);
 
 private :
     string fullFileName;

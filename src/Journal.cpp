@@ -19,8 +19,12 @@ namespace JournalServiceServer
 
 Journal::~Journal()
 {
-    committedTxnId.reset();
-    curSegment.reset();
+    if (committedTxnId) {
+        committedTxnId.reset();
+    }
+    if(curSegment) {
+        curSegment.reset();
+    }
 }
 
 /**

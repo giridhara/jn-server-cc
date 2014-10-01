@@ -12,6 +12,15 @@ namespace JournalServiceServer
 
 scoped_ptr<JournalNode> global_jn;
 
+
+JournalNode::~JournalNode() {
+    for(map<string, Journal*>::const_iterator iter = journalsById.begin(); iter != journalsById.end(); iter++) {
+        LOG.info("Closing journal %s", iter->first.c_str());
+        iter->second->close();
+        delete (iter->second);
+    }
+}
+
 int
 JournalNode::getLogDir(const string& jid, string& logDir) {
     if(jid.empty()) {
