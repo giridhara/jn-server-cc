@@ -90,7 +90,7 @@ public:
         return highestWrittenTxId;
     }
 
-    int newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret);
+    int newEpoch(const NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret);
     int format(const NamespaceInfo& nsInfo);
     int startLogSegment(const RequestInfo& reqInfo, const long txid, const int layoutVersion);
     int finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId, const long endTxId);
@@ -121,7 +121,7 @@ public:
     }
 
     // TODO : Making getSegmentInfo public just for testing purpose
-    int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
+    int getSegmentInfo(const long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
 
 private:
     void refreshCachedData();
@@ -141,13 +141,13 @@ private:
 
 //    int getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized);
 
-    int purgePaxosDecision(long segmentTxId);
-    int getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized);
-    int completeHalfDoneAcceptRecovery(hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized);
-    int persistPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& newData);
+    int purgePaxosDecision(const long segmentTxId);
+    int getPersistedPaxosData(const long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized);
+    int completeHalfDoneAcceptRecovery(const hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized);
+    int persistPaxosData(const long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& newData);
     int syncLog(const RequestInfo& reqInfo, const hadoop::hdfs::SegmentStateProto& segment, const string& url, string& ret);
 
-    int updateLastPromisedEpoch (long oldEpoch, long newEpoch) {
+    int updateLastPromisedEpoch (const long oldEpoch, const long newEpoch) {
        LOG.info("Updating lastPromisedEpoch from %d to %d", oldEpoch, newEpoch);
        if(lastPromisedEpoch->set(newEpoch) != 0 ){
            return -1;
@@ -155,7 +155,7 @@ private:
 
        // Since we have a new writer, reset the IPC serial - it will start
        // counting again from 0 for this writer.
-       currentEpochIpcSerial = -1;
+       currentEpochIpcSerial = 0;
        return 0;
      }
 

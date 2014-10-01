@@ -71,7 +71,7 @@ public:
         corruptHeader(false)
     {}
 
-    bool isInitialized() {
+    bool isInitialized() const{
         return !fullFileName.empty();
     }
 
@@ -85,7 +85,7 @@ public:
       return lastTxId;
     }
 
-    bool containsTxId(long txId) {
+    bool containsTxId(long txId) const{
       return firstTxId <= txId && txId <= lastTxId;
     }
 
@@ -100,17 +100,15 @@ public:
 //          this.hasCorruptHeader = val.hasCorruptHeader();
 //        }
 
-    const bool isInProgress() {
+    const bool isInProgress() const{
       return inProgress;
     }
 
-    string getFile() {
+    string getFile() const{
       return fullFileName;
     }
 
-
-
-    bool hasCorruptHeader() {
+    bool hasCorruptHeader() const{
       return corruptHeader;
     }
 

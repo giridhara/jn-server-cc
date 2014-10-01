@@ -56,14 +56,14 @@ public:
     /**
        * Layout version of the storage data.
        */
-    int getLayoutVersion(){ return layoutVersion; }
+    int32_t getLayoutVersion(){ return layoutVersion; }
 
     /**
     * Namespace id of the file system.<p>
     * Assigned to the file system at formatting and never changes after that.
     * Shared by all file system components.
     */
-    int getNamespaceID() const { return namespaceID; }
+    int32_t getNamespaceID() const { return namespaceID; }
 
     /**
     * cluster id of the file system.<p>
@@ -104,9 +104,9 @@ public:
 
 
 private:
-    int   layoutVersion;   // layout version of the storage data
+    int32_t   layoutVersion;   // layout version of the storage data
     string clusterID;      // id of the cluster
-    int   namespaceID;     // id of the file system
+    int32_t   namespaceID;     // id of the file system
     uint64_t  cTime;           // creation time of the file system state
 };
 

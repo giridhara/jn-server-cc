@@ -62,8 +62,8 @@ QJournalProtocolServerSideTranslatorPB::journal(const hadoop::hdfs::JournalReque
     int ret = impl->journal(ri, req.segmenttxnid(), req.firsttxnid(), req.numtxns(), req.records());
     throwExceptionOnError(ret);
     hadoop::hdfs::JournalResponseProto resp;
-    //TODO:changed return VOID_JOURNAL_RESPONSE to hadoop::hdfs::JournalResponseProto::default_instance()
-    // Looks like there is nothing to worry because as per below webpage  Foo getDefaultInstance() is similar to Foo.newBuilder().build()
+    //Changed return VOID_JOURNAL_RESPONSE to hadoop::hdfs::JournalResponseProto::default_instance()
+    //As per below webpage  Foo getDefaultInstance() is similar to Foo.newBuilder().build()
     //https://developers.google.com/protocol-buffers/docs/reference/java-generated
     return hadoop::hdfs::JournalResponseProto::default_instance();
 }
@@ -74,7 +74,6 @@ QJournalProtocolServerSideTranslatorPB::startLogSegment(const hadoop::hdfs::Star
     RequestInfo ri(req.reqinfo());
     int ret = impl->startLogSegment(ri, req.txid(), req.layoutversion());
     throwExceptionOnError(ret);
-    //TODO: changed from VOID_START_LOG_SEGMENT_RESPONSE to hadoop::hdfs::StartLogSegmentResponseProto::default_instance()
     return hadoop::hdfs::StartLogSegmentResponseProto::default_instance();
 }
 

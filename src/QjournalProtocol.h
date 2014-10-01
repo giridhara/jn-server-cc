@@ -37,7 +37,7 @@ public :
   /**
    * Begin a new epoch. See the HDFS-3077 design doc for details.
    */
-  virtual int newEpoch(const string& journalId, NamespaceInfo& nsInfo,
+  virtual int newEpoch(const string& journalId, const NamespaceInfo& nsInfo,
           const uint64_t epoch, hadoop::hdfs::NewEpochResponseProto&) = 0;
 
   /**

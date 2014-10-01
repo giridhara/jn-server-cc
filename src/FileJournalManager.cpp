@@ -60,7 +60,7 @@ FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgres
 }
 
 int
-FileJournalManager::startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>& ret) {
+FileJournalManager::startLogSegment(const long txid, const int layoutVersion, scoped_ptr<JNClientOutputStream>& ret) {
     boost::recursive_mutex::scoped_lock lock(mMutex);
     currentInProgress = getInProgressEditsFile(jnStorage.getCurrentDir(), txid);
     ret.reset(new JNClientOutputStream(currentInProgress));
@@ -73,7 +73,7 @@ FileJournalManager::startLogSegment(long txid, int layoutVersion, scoped_ptr<JNC
 }
 
 int
-FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
+FileJournalManager::finalizeLogSegment(const long firstTxId, const long lastTxId) {
     boost::recursive_mutex::scoped_lock lock(mMutex);
     string inProgressFile = getInProgressEditsFile(jnStorage.getCurrentDir(), firstTxId);
     string dstFile = getFinalizedEditsFile(jnStorage.getCurrentDir(), firstTxId, lastTxId);
@@ -101,7 +101,7 @@ FileJournalManager::finalizeLogSegment(long firstTxId, long lastTxId) {
 }
 
 int
-FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
+FileJournalManager::getLogFiles(const long fromTxId, vector<EditLogFile>& ret){
     boost::recursive_mutex::scoped_lock lock(mMutex);
     cout << "getting all logs from txid : " << fromTxId << endl;
     string currentDir = jnStorage.getCurrentDir();
@@ -123,13 +123,13 @@ FileJournalManager::getLogFiles(long fromTxId, vector<EditLogFile>& ret){
 }
 
 int
-FileJournalManager::getLogFile(long startTxId, EditLogFile& ret) {
+FileJournalManager::getLogFile(const long startTxId, EditLogFile& ret) {
     boost::recursive_mutex::scoped_lock lock(mMutex);
     return getLogFile(jnStorage.getCurrentDir(), startTxId, ret);
 }
 
 int
-FileJournalManager::getLogFile(string dir, long startTxId, EditLogFile& result) {
+FileJournalManager::getLogFile(const string& dir, const long startTxId, EditLogFile& result) {
     vector<EditLogFile> matchedEditLogs;
     if(matchEditLogs(dir, matchedEditLogs) != 0) {
         return -1;

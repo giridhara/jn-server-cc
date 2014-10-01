@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <util/JNServiceMiscUtils.h>
 
 //new lines
 //#include "../../ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h"
@@ -51,7 +52,8 @@ Server::createConfigFile(){
 
 bool
 Server::deleteConfigFile() {
-    return remove(server_config.c_str()) == 0;
+    return JournalServiceServer::file_delete(server_config);
+//    return remove(server_config.c_str()) == 0;
 }
 
 void

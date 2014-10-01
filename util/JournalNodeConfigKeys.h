@@ -27,5 +27,4 @@ const string  DFS_JOURNALNODE_EDITS_DIR_KEY = "dfs.journalnode.edits.dir";
   const string  DFS_JOURNALNODE_INTERNAL_SPNEGO_USER_NAME_KEY = "dfs.journalnode.kerberos.internal.spnego.principal";
 }
 
-
 #endif /* JOURNALNODECONFIGKEYS_H_ */

@@ -48,7 +48,7 @@ JournalNodeRpcServer::getJournalState(const string& journalId,
 }
 
 int
-JournalNodeRpcServer::newEpoch(const string& journalId, NamespaceInfo& nsInfo,
+JournalNodeRpcServer::newEpoch(const string& journalId, const NamespaceInfo& nsInfo,
              const uint64_t epoch, hadoop::hdfs::NewEpochResponseProto& ret){
     Journal* journal = 0;
     int rc = jn.getOrCreateJournal(journalId, journal);
@@ -115,7 +115,9 @@ JournalNodeRpcServer::getEditLogManifest(const string& jid, const long sinceTxId
         return -1;
     }
 
-    cout << "number of elf's in the vector after getEditLogManifest call is " << elfv.size() << endl;
+    int numEle = elfv.size();
+
+    cout << "number of elf's in the vector after getEditLogManifest call is " << numEle << endl;
 
     hadoop::hdfs::RemoteEditLogManifestProto* relmp = new hadoop::hdfs::RemoteEditLogManifestProto();
 

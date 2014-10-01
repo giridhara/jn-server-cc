@@ -44,7 +44,6 @@ public:
             hpp.reset(new HostPortPair(rpcaddress));
         }
 
-        //TODO :: Giving default values for now for hostname and port address of rpc server
         server = new icerpc::Server(instance, "QJournalProtocolPB", hpp->hostname, hpp->port, 1);
     }
 
@@ -52,7 +51,7 @@ public:
     void start();
     int isFormatted(const string& journalId, bool& result);
     int getJournalState(const string& journalId, hadoop::hdfs::GetJournalStateResponseProto&);
-    int newEpoch(const string& journalId, NamespaceInfo& nsInfo,
+    int newEpoch(const string& journalId, const NamespaceInfo& nsInfo,
             const uint64_t epoch, hadoop::hdfs::NewEpochResponseProto&);
     int format(const string& journalId, const NamespaceInfo& nsInfo);
     int journal(const RequestInfo& reqInfo, const long segmentTxId,

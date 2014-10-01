@@ -97,7 +97,7 @@ Journal::format(const NamespaceInfo& nsInfo) {
 }
 
 int
-Journal::newEpoch(NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret) {
+Journal::newEpoch(const NamespaceInfo& nsInfo, long epoch, hadoop::hdfs::NewEpochResponseProto& ret) {
     LOG.info("Received newEpoch request with epoch numner %d", epoch);
     boost::recursive_mutex::scoped_lock lock(mMutex);
     if(checkFormatted() != 0) {
@@ -167,7 +167,7 @@ Journal::checkRequest(const RequestInfo& reqInfo) {
 
     // Ensure that the IPCs are arriving in-order as expected.
     if(reqInfo.getIpcSerialNumber() <= currentEpochIpcSerial) {
-        LOG.error("IPC serial %s from client was not higher than prior highest IPC serial %s",
+        LOG.error("IPC serial %s from client was not higher than prior highest IPC serial %d",
                 reqInfo.getIpcSerialNumber(), currentEpochIpcSerial);
         return -1;
     }
@@ -292,7 +292,7 @@ Journal::finalizeLogSegment(const RequestInfo& reqInfo, const long startTxId,
    * segment does not exist.
    */
 int
-Journal::getSegmentInfo(long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized) {
+Journal::getSegmentInfo(const long segmentTxId, hadoop::hdfs::SegmentStateProto& ssp, bool& isInitialized) {
     EditLogFile elf;
     if( fjm.getLogFile(segmentTxId, elf) != 0 ) {
         return -1;
@@ -372,7 +372,7 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
     }
     if (existing.isInitialized()) {
         if (!existing.isInProgress()) {
-            LOG.error("Already have a finalized segment %s beginning at ",
+            LOG.error("Already have a finalized segment %s beginning at %d",
               existing.getFile().c_str(), txid);
             abort();
         }
@@ -422,8 +422,8 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
 
 int
 Journal::journal(const RequestInfo& reqInfo,
-      long segmentTxId, long firstTxnId,
-      int numTxns, const string& records) {
+      const long segmentTxId, const long firstTxnId,
+      const int numTxns, const string& records) {
     LOG.debug("Received request from client to persist following record '%s'", records.c_str());
     boost::recursive_mutex::scoped_lock lock(mMutex);
 
@@ -493,7 +493,7 @@ Journal::journal(const RequestInfo& reqInfo,
    * @throws IOException if the file could not be deleted
    */
 int
-Journal::purgePaxosDecision(long segmentTxId) {
+Journal::purgePaxosDecision(const long segmentTxId) {
     string paxosFile = storage.getPaxosFile(segmentTxId);
     bool hasPaxosFile = false;
     if(file_exists(paxosFile, hasPaxosFile) !=0 ){
@@ -583,7 +583,7 @@ Journal::prepareRecovery(
   * Retrieve the persisted data for recovering the given segment from disk.
   */
 int
-Journal::getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized) {
+Journal::getPersistedPaxosData(const long segmentTxId, hadoop::hdfs::PersistedRecoveryPaxosData& ret, bool& isInitialized) {
     string paxosFileName = storage.getPaxosFile(segmentTxId);
     bool paxos_file_exists_flag = false;
 
@@ -633,7 +633,7 @@ Journal::getPersistedPaxosData(long segmentTxId, hadoop::hdfs::PersistedRecovery
    */
 int
 Journal::completeHalfDoneAcceptRecovery(
-      hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized) {
+      const hadoop::hdfs::PersistedRecoveryPaxosData& paxosData, bool isInitialized) {
     if (!isInitialized) {
         return 0;
     }
@@ -662,7 +662,7 @@ Journal::completeHalfDoneAcceptRecovery(
    * Persist data for recovering the given segment from disk.
    */
 int
-Journal::persistPaxosData(long segmentTxId,
+Journal::persistPaxosData(const long segmentTxId,
       hadoop::hdfs::PersistedRecoveryPaxosData& newData) {
     string f = storage.getPaxosFile(segmentTxId);
     //TODO: trying to write atomically here by writing to .tmp file first; upon successful write renaming it to file without .tmp extension

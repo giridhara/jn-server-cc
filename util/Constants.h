@@ -46,6 +46,4 @@ enum LogLevel
 
 }
 
-
-
 #endif /* CONSTANTS_H_ */

@@ -46,7 +46,7 @@ public:
     int startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>&);
 
 private:
-    int getLogFile(string dir, long startTxId, EditLogFile&);
+    int getLogFile(const string& dir, long startTxId, EditLogFile&);
     int GetFilesInDirectory(const string& directory, vector<string> &out);
     int matchEditLogs(const string& dir, vector<EditLogFile> & ret );
     int matchEditLogs(const string& dir, const vector<string>& filesInStorage, vector<EditLogFile>& ret);

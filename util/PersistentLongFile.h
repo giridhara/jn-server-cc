@@ -55,7 +55,7 @@ class PersistentLongFile {
         return 0;
     }
 
-    int set(long newVal) {
+    int set(const long newVal) {
         if (value != newVal || !loaded) {
             if(writeFile(file, newVal) != 0)
                 return -1;
