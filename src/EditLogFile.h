@@ -43,25 +43,11 @@ public:
     //copy constructor
     EditLogFile(const EditLogFile& other)
       : firstTxId(other.firstTxId),
-        inProgress(other.inProgress)
-    {
-      fullFileName = other.fullFileName;
-      lastTxId = other.lastTxId;
-      corruptHeader = other.corruptHeader;
-    }
-
-//    //assignment opertor
-//    EditLogFile& operator = (const EditLogFile& other){
-//        cout << "assignment operator called for file " << other.file << endl;
-//        file = other.file;
-//        firstTxId =  other.firstTxId;
-//        lastTxId =other.lastTxId;
-//        inProgress = other.inProgress;
-//        corruptHeader = other.corruptHeader;
-//
-//        return *this;
-//    }
-
+        inProgress(other.inProgress),
+        fullFileName(other.fullFileName),
+        lastTxId(other.lastTxId),
+        corruptHeader(other.corruptHeader)
+    {}
 
     EditLogFile():
         fullFileName(""),

@@ -34,20 +34,19 @@
 using namespace std;
 using std::string;
 
-
 namespace JournalServiceServer
 {
   const bool IS_LITTLE_ENDIAN = (1 == *(unsigned char *)&(const int){1});
 
-string getNameNodeFileName(const string filenamePrefix, long txid);
+string getNameNodeFileName(const string& filenamePrefix, const long txid);
 
-string getInProgressEditsFileName(long startTxId);
-string getInProgressEditsFile(string currentDir, long startTxId);
+string getInProgressEditsFileName(const long startTxId);
+string getInProgressEditsFile(const string& currentDir, const long startTxId);
 
-string getFinalizedEditsFileName(long startTxId, long endTxId);
+string getFinalizedEditsFileName(const long startTxId, const long endTxId);
 
-string getFinalizedEditsFile(string currentDir,
-    long startTxId, long endTxId);
+string getFinalizedEditsFile(const string& currentDir,
+    const long startTxId, const long endTxId);
 
 int file_exists(const string& name, bool& file_exists_flag);
 int dir_exists(const string& name, bool& dir_exists_flag);
@@ -61,9 +60,9 @@ struct HostPortPair
   {
     string hostname;
     int port;
-    HostPortPair(string name);
+    HostPortPair(const string& name);
 
-    static bool isValid(string name);
+    static bool isValid(const string& name);
   };
 
 }

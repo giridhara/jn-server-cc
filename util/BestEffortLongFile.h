@@ -87,7 +87,6 @@ public:
         if (opened) {
           return 0;
         }
-        char line[128];
 
         ifstream ifs(filename.c_str());
         if(!ifs.is_open()) {

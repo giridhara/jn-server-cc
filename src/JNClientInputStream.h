@@ -48,7 +48,7 @@ class JNClientInputStream
 {
 
 public:
-    JNClientInputStream(const string ostrm);
+    JNClientInputStream(const string& ostrm);
     static int scanLog(string& filename, long& lastTxId, bool& corruptHeader);
 
     const bool operator>(const JNClientInputStream &other) const;

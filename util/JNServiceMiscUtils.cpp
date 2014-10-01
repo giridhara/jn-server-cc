@@ -23,14 +23,14 @@
 
 namespace JournalServiceServer
 {
-HostPortPair::HostPortPair(string name)
+HostPortPair::HostPortPair(const string& name)
   {
     size_t host_pos = name.find_first_of(":");
     hostname = name.substr(0, host_pos);
     port = atoi(name.substr(host_pos + 1).c_str());
   }
 
-bool HostPortPair::isValid(string name) {
+bool HostPortPair::isValid(const string& name) {
     size_t host_pos = name.find_first_of(":");
     size_t length = name.size();
     if (host_pos == string::npos || host_pos == 0 || host_pos == length)
@@ -43,22 +43,22 @@ bool HostPortPair::isValid(string name) {
     return true;
   }
 
-string getNameNodeFileName(const string filenamePrefix, long txid) {
+string getNameNodeFileName(const string& filenamePrefix, const long txid) {
      ostringstream strm;
      strm << filenamePrefix << "_";
      strm  << setfill('0') << setw(19) << txid;
     return strm.str();
 }
 
-string getInProgressEditsFileName(long startTxId) {
+string getInProgressEditsFileName(const long startTxId) {
     return getNameNodeFileName(EDITS_INPROGRESS, startTxId);
 }
 
-string getInProgressEditsFile(string currentDir, long startTxId) {
+string getInProgressEditsFile(const string& currentDir, const long startTxId) {
     return string(currentDir + "/" + getInProgressEditsFileName(startTxId));
 }
 
-string getFinalizedEditsFileName(long startTxId, long endTxId) {
+string getFinalizedEditsFileName(const long startTxId, const long endTxId) {
     ostringstream strm;
     strm << EDITS << "_";
     strm << setfill('0') << setw(19) << startTxId;
@@ -67,8 +67,8 @@ string getFinalizedEditsFileName(long startTxId, long endTxId) {
     return strm.str();
   }
 
-string getFinalizedEditsFile(string currentDir,
-    long startTxId, long endTxId) {
+string getFinalizedEditsFile(const string& currentDir,
+    const long startTxId, const long endTxId) {
     return string(currentDir + "/" +
         getFinalizedEditsFileName(startTxId, endTxId));
 }

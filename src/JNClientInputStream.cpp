@@ -25,7 +25,7 @@ using namespace std;
 
 namespace JournalServiceServer
 {
-  JNClientInputStream::JNClientInputStream(const string ostrm):
+  JNClientInputStream::JNClientInputStream(const string& ostrm):
     mCurPosition(0),
     mStrm(ostrm)
   {}

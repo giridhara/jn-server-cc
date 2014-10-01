@@ -22,7 +22,7 @@ class Server : public Ice::Application
 {
     static const string server_config;
 public:
-    Server(const ObjectPtr instance, const string& protocol, const string bind_address, int port, int num_handlers)
+    Server(const ObjectPtr instance, const string& protocol, const string& bind_address, int port, int num_handlers)
         :adapter(0),
          instance(instance),
          protocol(protocol),

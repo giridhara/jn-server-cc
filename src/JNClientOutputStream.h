@@ -42,7 +42,7 @@ namespace JournalServiceServer
   class JNClientOutputStream
   {
     public:
-      JNClientOutputStream(const string filename)
+      JNClientOutputStream(const string& filename)
         :
           filename(filename),
           stream(filename.c_str(), std::ofstream::out | std::ofstream::binary)
