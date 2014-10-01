@@ -89,17 +89,6 @@ public:
       return firstTxId <= txId && txId <= lastTxId;
     }
 
-//    /**
-//         * Find out where the edit log ends.
-//         * This will update the lastTxId of the EditLogFile or
-//         * mark it as corrupt if it is.
-//         */
-//        void validateLog() {
-//          EditLogValidation val = EditLogFileInputStream.validateEditLog(file);
-//          this.lastTxId = val.getEndTxId();
-//          this.hasCorruptHeader = val.hasCorruptHeader();
-//        }
-
     const bool isInProgress() const{
       return inProgress;
     }
@@ -145,7 +134,6 @@ private :
     //inProgress is supposed to be a constant
     bool inProgress;
     bool corruptHeader;
-
 };
 
 } /* namespace JournalServiceServer */
