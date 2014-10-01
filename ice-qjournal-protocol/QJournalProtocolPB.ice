@@ -20,7 +20,7 @@
 #define QJOURNALPROTOCOLPB_ICE
 
 [["cpp:include:QJournalProtocol.pb.h"]]
-[["cpp:include:src/StreamProtobuf.h"]]
+[["cpp:include:ice-qjournal-protocol/src/StreamProtobuf.h"]]
 
 module QJournalProtocolProtos
 {
