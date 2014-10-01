@@ -22,6 +22,9 @@
 namespace JournalServiceServer
 {
 
+const string STORAGE_FILE_LOCK = "in_use.lock";
+const string STORAGE_FILE_VERSION  = "VERSION";
+
 using std::ostringstream;
 using std::string;
 using std::ofstream;
@@ -32,11 +35,25 @@ class JNStorage : public StorageInfo
 public:
     JNStorage(string logDir) :
         logDir(logDir),
-        currentDir(logDir + "/" + "current")
+        currentDir(logDir + "/" + "current"),
+        lockFileFD(-1),
+        initialized(false)
     {
-        analyzeStorage();
+        if(analyzeStorage() == 0) {
+            initialized = true;
+        }
     }
     virtual ~JNStorage() {}
+
+    void unlock() {
+        if(lockFileFD > 0){
+            close(lockFileFD);
+        }
+    }
+
+    bool isInitialized() const {
+        return initialized;
+    }
 
     const string getInProgressEditLog(long startTxId) const{
         return getInProgressEditsFile(currentDir, startTxId);
@@ -103,6 +120,12 @@ public:
         return ostr.str();
     }
 
+    string getLockFile() {
+        ostringstream ostr;
+        ostr << logDir << "/" << STORAGE_FILE_LOCK;
+        return ostr.str();
+    }
+
     int clearLogDirectory();
 
     int writeProperties(string to);
@@ -114,28 +137,15 @@ public:
     int checkConsistentNamespace(NamespaceInfo nsInfo);
 
 private:
-    int findFinalizedEditsFile(long startTxId, long endTxId, string& res) {
-        ostringstream ostr;
-        ostr << logDir << "/" << "edits_" << startTxId << "_" << endTxId;
-        bool exists = false;
-        try{
-            exists = boost::filesystem::exists(ostr.str().c_str());
-        }catch (const boost::filesystem::filesystem_error& ex){
-            cout << ex.what() << '\n';
-            return -1;
-        }
-        if (!exists) {
-            return -1;
-        }
-
-        res = ostr.str();
-        return 0;
-    }
     int analyzeStorage();
+    int analyzeStorageDirectory();
 
     string logDir;
     string currentDir;
     StorageState state;
+    int lockFileFD;
+
+    bool initialized;
 };
 
 } /* namespace JournalServiceServer */

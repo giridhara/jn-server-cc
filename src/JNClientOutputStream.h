@@ -49,7 +49,7 @@ namespace JournalServiceServer
       {}
       ~JNClientOutputStream();
 
-     /** TODO : need to implement this function
+     /**
      * Close the stream without necessarily flushing any pending data.
      * This may be called after a previous write or close threw an exception.
      */

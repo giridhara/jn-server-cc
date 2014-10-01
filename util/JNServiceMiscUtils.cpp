@@ -20,33 +20,36 @@
 #include <stdlib.h>
 #include "Logger.h"
 #include <unistd.h>
+#include <fcntl.h>
+#include <cerrno>
+#include <cstring>
 
 namespace JournalServiceServer
 {
 HostPortPair::HostPortPair(const string& name)
-  {
+{
     size_t host_pos = name.find_first_of(":");
     hostname = name.substr(0, host_pos);
     port = atoi(name.substr(host_pos + 1).c_str());
-  }
+}
 
 bool HostPortPair::isValid(const string& name) {
     size_t host_pos = name.find_first_of(":");
     size_t length = name.size();
     if (host_pos == string::npos || host_pos == 0 || host_pos == length)
-      return false;
-    for (size_t i = host_pos +1; i < length; i++)
-    {
-      if ( name[i] < '0' || name[i] > '9' )
         return false;
+    for (size_t i = host_pos + 1; i < length; i++) {
+        if (name[i] < '0' || name[i] > '9')
+            return false;
     }
     return true;
-  }
+}
 
-string getNameNodeFileName(const string& filenamePrefix, const long txid) {
-     ostringstream strm;
-     strm << filenamePrefix << "_";
-     strm  << setfill('0') << setw(19) << txid;
+string getNameNodeFileName(const string& filenamePrefix, const long txid)
+{
+    ostringstream strm;
+    strm << filenamePrefix << "_";
+    strm << setfill('0') << setw(19) << txid;
     return strm.str();
 }
 
@@ -76,9 +79,9 @@ string getFinalizedEditsFile(const string& currentDir,
 int file_exists(const string& name, bool& file_exists_flag) {
     bool temp = false;
 
-    try{
+    try {
         temp = boost::filesystem::is_regular(name);
-    }catch(const boost::filesystem::filesystem_error& ex){
+    } catch (const boost::filesystem::filesystem_error& ex) {
         LOG.error("%s", ex.what());
         return -1;
     }
@@ -89,9 +92,9 @@ int file_exists(const string& name, bool& file_exists_flag) {
 int dir_exists(const string& name, bool& dir_exists_flag) {
     bool temp = false;
 
-    try{
+    try {
         temp = boost::filesystem::is_directory(name);
-    }catch(const boost::filesystem::filesystem_error& ex){
+    } catch (const boost::filesystem::filesystem_error& ex) {
         LOG.error("%s", ex.what());
         return -1;
     }
@@ -102,7 +105,7 @@ int dir_exists(const string& name, bool& dir_exists_flag) {
 int file_rename(const string& from, const string& to ) {
     try{
         boost::filesystem::rename(from, to);
-    }catch(const boost::filesystem::filesystem_error& ex){
+    } catch (const boost::filesystem::filesystem_error& ex) {
         LOG.error("%s", ex.what());
         return -1;
     }
@@ -112,7 +115,7 @@ int file_rename(const string& from, const string& to ) {
 int file_delete(const string& name) {
     try{
         boost::filesystem::remove(name.c_str());
-    }catch(const boost::filesystem::filesystem_error& ex){
+    } catch (const boost::filesystem::filesystem_error& ex) {
         LOG.error("%s", ex.what());
         return -1;
     }
@@ -133,21 +136,41 @@ int replaceFile(const string& src, const string& target) {
    */
     int numRetries = 5;
     while (numRetries-- > 0) {
-        bool target_exists = false;
-        try{
+        try {
+            bool target_exists = false;
             file_exists(target, target_exists);
-            if(!target_exists) break;
-            if(file_delete(target) == 0) {
+            if (!target_exists)
+                break;
+            if (file_delete(target) == 0) {
                 break;
             }
-            usleep(1*1000*1000);
-        }catch(const boost::filesystem::filesystem_error& ex){
-            if(numRetries <= 0) {
+            usleep(1 * 1000 * 1000);
+        } catch (const boost::filesystem::filesystem_error& ex) {
+            if (numRetries <= 0) {
                 break;
             }
         }
     }
     return file_rename(src, target);
+}
+
+int
+try_to_acquire_lockfile(const string &lockfn)
+{
+    const int fd = open(lockfn.c_str(), O_APPEND|O_CREAT|O_RDWR, 0644);
+    if (fd < 0) {
+        return (errno > 0 ? -errno : -1);
+    }
+    struct flock fl;
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_WRLCK;
+    fl.l_whence = SEEK_SET;
+    if (fcntl(fd, F_SETLK, &fl)) {
+        const int err = errno;
+        close(fd);
+        return (err > 0 ? -err : -1);
+    }
+    return fd;
 }
 
 }

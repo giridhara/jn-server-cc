@@ -53,12 +53,10 @@ JNClientInputStream::scanLog(string& filename, long& lastTxId, bool& hasHeaderCo
       }
     }
 
-    long lastPos = 0;
     long tempLast = INVALID_TXID;
     long numValid = 0;
     while (true) {
         long txid = INVALID_TXID;
-        lastPos = in.mCurPosition;
         if (in.scanOp(txid) != 0) {
           LOG.error("Got error after scanning over %d transactions at position %d", numValid, in.mCurPosition);
           return -1;

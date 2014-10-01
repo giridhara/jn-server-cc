@@ -45,7 +45,8 @@ JournalNode::getOrCreateJournal(const string& jid, Journal*& journal) {
             return -1;
         cout << "Initializing journal in directory " + logDir << endl;
         journal = new Journal(conf, logDir, jid);
-        if(journal->isFormatted() && journal->getStorage().readProperties(journal->getStorage().getVersionFile()) != 0) {
+        if (!journal->isInitialized()) {
+            delete journal;
             return -1;
         }
         journalsById[jid] = journal;

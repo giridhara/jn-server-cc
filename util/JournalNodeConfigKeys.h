@@ -21,10 +21,6 @@ const string  DFS_JOURNALNODE_EDITS_DIR_KEY = "dfs.journalnode.edits.dir";
   const string  DFS_JOURNALNODE_HTTP_ADDRESS_KEY = "dfs.journalnode.http-address";
   const string  DFS_JOURNALNODE_HTTP_PORT_DEFAULT = "8480";
   const string  DFS_JOURNALNODE_HTTP_ADDRESS_DEFAULT = "0.0.0.0:" + DFS_JOURNALNODE_HTTP_PORT_DEFAULT;
-
-  const string  DFS_JOURNALNODE_KEYTAB_FILE_KEY = "dfs.journalnode.keytab.file";
-  const string  DFS_JOURNALNODE_USER_NAME_KEY = "dfs.journalnode.kerberos.principal";
-  const string  DFS_JOURNALNODE_INTERNAL_SPNEGO_USER_NAME_KEY = "dfs.journalnode.kerberos.internal.spnego.principal";
 }
 
 #endif /* JOURNALNODECONFIGKEYS_H_ */

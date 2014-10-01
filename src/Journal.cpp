@@ -17,16 +17,6 @@
 namespace JournalServiceServer
 {
 
-Journal::~Journal()
-{
-    if (committedTxnId) {
-        committedTxnId.reset();
-    }
-    if(curSegment) {
-        curSegment.reset();
-    }
-}
-
 /**
    * Reload any data that may have been cached. This is necessary
    * when we first load the Journal, but also after any formatting

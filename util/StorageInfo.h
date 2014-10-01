@@ -23,8 +23,6 @@ using namespace std;
 namespace JournalServiceServer
 {
 
-const string STORAGE_FILE_VERSION  = "VERSION";
-
 class StorageInfo
 {
 public:

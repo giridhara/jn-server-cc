@@ -34,8 +34,8 @@ JNStorage::writeProperties(string to) {
 
 int
 JNStorage::clearLogDirectory() {
-    bool dir_exists = false;
     try{
+        bool dir_exists = false;
         dir_exists = boost::filesystem::exists(currentDir.c_str());
         if (dir_exists){
             boost::filesystem::remove_all(currentDir.c_str());
@@ -60,7 +60,8 @@ JNStorage::format(const NamespaceInfo& nsInfo) {
     // re-analyze it after format(). The analyzeStorage() call
     // below is reponsible for re-locking it. This is a no-op
     // if the storage is not currently locked.
-//TODO:    unlockAll();
+    unlock();
+
     if(clearLogDirectory() != 0) {
         return -1;
     }
@@ -71,14 +72,7 @@ JNStorage::format(const NamespaceInfo& nsInfo) {
     }
     LOG.info("Created paxos dir: %s", getPaxosDir().c_str());
 
-    if(analyzeStorage() != 0 ) {
-        return -1;
-    }
-    if(state == NORMAL) {
-        if(readProperties(getVersionFile()) != 0)
-            return -1;
-    }
-    return 0;
+    return analyzeStorage();
 }
 
 int
@@ -98,9 +92,19 @@ JNStorage::checkConsistentNamespace(NamespaceInfo nsInfo) {
     return 0;
 }
 
-
 int
 JNStorage::analyzeStorage() {
+    if(analyzeStorageDirectory() != 0){
+        return -1;
+    }
+    if (state == NORMAL) {
+      return readProperties(getVersionFile());
+    }
+    return 0;
+}
+
+int
+JNStorage::analyzeStorageDirectory() {
     bool storagedir_exists = false;
     // check that storage exists
     if(dir_exists(logDir, storagedir_exists) != 0 ) {
@@ -113,12 +117,17 @@ JNStorage::analyzeStorage() {
         state = NON_EXISTENT;
         return 0;
     }
-//    this.lock(); // lock storage if it exists
-//
+
+    int fd = try_to_acquire_lockfile(getLockFile()); // lock storage if it exists
+    if(fd < 0) {
+        LOG.error("Could not acquire lock on the file %s", getLockFile().c_str());
+        return -1;
+    }
+    lockFileFD = fd;
+
     // check whether current directory is valid
     string versionFile = getVersionFile();
     bool hasCurrent = false;
-
     if(file_exists(versionFile, hasCurrent) !=0 ){
         return -1;
     }

@@ -58,6 +58,7 @@ public:
         value = -1;
     }
     ~BestEffortLongFile(){
+        LOG.info("Destructor of BELF is called for %s", filename.c_str());
         if(ostrm.is_open()) {
             ostrm.close();
         }
@@ -93,7 +94,6 @@ public:
             // file does not exist , hence using default value
             value = defaultVal;
         } else {
-            long readval;
             char line[128];
             ifs.getline(line, 128);
 
@@ -104,6 +104,7 @@ public:
                 if(strlen(line) == 0)  // Skip any blank lines
                     value = defaultVal;
                 else{
+                    long readval;
                     if(strlen(line) != 19) {
                         LOG.error("File %s had invalid length:", filename.c_str());
                         return -1;

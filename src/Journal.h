@@ -53,24 +53,31 @@ public:
           lastWriterEpoch(),
           committedTxnId(),
           fjm(storage),
-          conf(conf)
+          conf(conf),
+          initialized(false)
     {
-        curSegment.reset(0);
-        lastPromisedEpoch.reset(0);
-        lastWriterEpoch.reset(0);
-        committedTxnId.reset(0);
- //     TODO :: have to read about how to handle failures in constructors in c++
-        refreshCachedData();
+        if(storage.isInitialized()) {
+            curSegment.reset(0);
+            lastPromisedEpoch.reset(0);
+            lastWriterEpoch.reset(0);
+            committedTxnId.reset(0);
+            refreshCachedData();
 
-        EditLogFile latest;
-        LOG.info("calling scanStorageLatestEdits from inside constructor of Journal");
-        if(scanStorageForLatestEdits(latest) != 0) {
-            if (latest.isInitialized()) {
-                highestWrittenTxId = latest.getLastTxId();
+            EditLogFile latest;
+            LOG.info("calling scanStorageLatestEdits from inside constructor of Journal");
+            if(scanStorageForLatestEdits(latest) == 0) {
+                if (latest.isInitialized()) {
+                    highestWrittenTxId = latest.getLastTxId();
+                }
+                initialized = true;
             }
         }
     }
-    virtual ~Journal();
+    virtual ~Journal(){}
+
+    bool isInitialized() const {
+        return initialized;
+    }
 
     int getLastPromisedEpoch(long& ret){
         boost::recursive_mutex::scoped_lock lock(mMutex);
@@ -112,11 +119,7 @@ public:
         return fjm;
     }
     int close() {
-//TODO:        storage.close();
-        if(committedTxnId)
-            committedTxnId->close();
-        if(curSegment)
-            curSegment->close();
+        storage.unlock();
         return 0;
     }
 
@@ -223,6 +226,8 @@ private:
     Ice::PropertiesPtr conf;
 
     boost::recursive_mutex mMutex;
+
+    bool initialized;
 
 };
 
