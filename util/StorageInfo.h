@@ -26,7 +26,7 @@ namespace JournalServiceServer
 class StorageInfo
 {
 public:
-    StorageInfo(int32_t layoutV, string cid, int32_t nsID,  uint64_t cT)
+    StorageInfo(const int32_t layoutV, const string& cid, const int32_t nsID,  const uint64_t cT)
         :
         layoutVersion(layoutV),
         clusterID(cid),
@@ -54,7 +54,7 @@ public:
     /**
        * Layout version of the storage data.
        */
-    int32_t getLayoutVersion(){ return layoutVersion; }
+    int32_t getLayoutVersion() const { return layoutVersion; }
 
     /**
     * Namespace id of the file system.<p>
@@ -66,13 +66,13 @@ public:
     /**
     * cluster id of the file system.<p>
     */
-    string    getClusterID() { return clusterID; }
+    string getClusterID() const { return clusterID; }
 
     /**
     * Creation time of the file system state.<p>
     * Modified during upgrades.
     */
-     long getCTime() { return cTime; }
+     long getCTime() const { return cTime; }
 
      int readProperties(const string& from){
          ifstream is(from.c_str());

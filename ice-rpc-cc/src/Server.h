@@ -31,7 +31,7 @@ public:
          num_handlers(num_handlers),
          running(false)
     {}
-    virtual ~Server();
+    virtual ~Server() {}
     int createConfigFile();
     bool deleteConfigFile();
     void start();

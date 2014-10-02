@@ -41,7 +41,7 @@ namespace JournalServiceServer
 
 class NamespaceInfo :public  StorageInfo
 {
-    const string   bpId;
+    const string bpId;
 
     public:
     NamespaceInfo(const hadoop::hdfs::NamespaceInfoProto& info)

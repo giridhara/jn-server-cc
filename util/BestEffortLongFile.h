@@ -48,7 +48,7 @@ public:
         opened(false)
     {}
 
-    BestEffortLongFile(string file, long defaultVal)
+    BestEffortLongFile(const string& file, const long defaultVal)
         :
         filename(file),
         defaultVal(defaultVal),

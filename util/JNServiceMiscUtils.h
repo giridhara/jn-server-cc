@@ -56,6 +56,8 @@ int replaceFile(const string& src, const string& target);
 
 int file_delete(const string& name);
 
+int is_absolute_path(const string& path);
+
 int try_to_acquire_lockfile(const string &lockfn);
 
 struct HostPortPair

@@ -49,7 +49,7 @@ JNClientOutputStream::flush(){
 }
 
 bool
-JNClientOutputStream::create(int layoutVersion) {
+JNClientOutputStream::create(const int layoutVersion) {
     stream.seekp(0);
     // write header - layout version , followed by layout flags
     writeInt(layoutVersion);

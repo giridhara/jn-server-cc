@@ -12,7 +12,6 @@ namespace JournalServiceServer
 
 scoped_ptr<JournalNode> global_jn;
 
-
 JournalNode::~JournalNode() {
     for(map<string, Journal*>::const_iterator iter = journalsById.begin(); iter != journalsById.end(); iter++) {
         LOG.info("Closing journal %s", iter->first.c_str());
@@ -24,7 +23,8 @@ JournalNode::~JournalNode() {
 int
 JournalNode::getLogDir(const string& jid, string& logDir) {
     if(jid.empty()) {
-            return -1;
+        LOG.error("journal identifier is empty");
+        abort();
     }
     string dir;
     dir = conf->getProperty(DFS_JOURNALNODE_EDITS_DIR_KEY);
@@ -57,9 +57,35 @@ JournalNode::getOrCreateJournal(const string& jid, Journal*& journal) {
   }
 
 void
+JournalNode::validateAndCreateJournalDir(const string& dir) {
+    if (!is_absolute_path(dir)) {
+      LOG.error("Journal dir '%s' should be an absolute path", dir.c_str());
+      abort();
+    }
+
+    bool journal_dir_exists_flag = false;
+    if(dir_exists(dir, journal_dir_exists_flag) != 0 ) {
+      abort();
+    }
+
+    if (!journal_dir_exists_flag) {
+      bool is_created = false;
+      try {
+          is_created = boost::filesystem::create_directories(dir);
+      }catch(const boost::filesystem::filesystem_error& ex){
+          LOG.error("%s", ex.what());
+          abort();
+      }
+      if(!is_created) {
+          LOG.error("Could not create Journal dir '%s'", dir.c_str());
+          abort();
+      }
+    }
+}
+
+void
 JournalNode::start() {
- //   TODO : implement validateAndCreateJournalDir function
- //   validateAndCreateJournalDir(localDir);
+    validateAndCreateJournalDir(localDir);
 
     ostringstream ostr;
     ostr << httpPort;

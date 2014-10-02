@@ -26,7 +26,6 @@ namespace JournalServiceServer
 {
 
 static const boost::regex IN_PROGRESS_PATTERN("^edits_inprogress_(\\d+)$");
-
 static const boost::regex FINALIZED_PATTERN("^edits_(\\d+)-(\\d+)$");
 
 class FileJournalManager
@@ -37,13 +36,13 @@ public:
             jnStorage(storage),
             currentInProgress()
     {}
-    virtual ~FileJournalManager();
+    virtual ~FileJournalManager() {}
 
-    int getLogFiles(long fromTxId, vector<EditLogFile>& ret);
+    int getLogFiles(const long fromTxId, vector<EditLogFile>& ret);
     int getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret);
-    int getLogFile(long startTxId, EditLogFile&);
-    int finalizeLogSegment(long firstTxId, long lastTxId);
-    int startLogSegment(long txid, int layoutVersion, scoped_ptr<JNClientOutputStream>&);
+    int getLogFile(const long startTxId, EditLogFile&);
+    int finalizeLogSegment(const long firstTxId, const long lastTxId);
+    int startLogSegment(const long txid, const int layoutVersion, scoped_ptr<JNClientOutputStream>&);
 
 private:
     int getLogFile(const string& dir, long startTxId, EditLogFile&);

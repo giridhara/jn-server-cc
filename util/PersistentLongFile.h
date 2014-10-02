@@ -34,7 +34,7 @@ class PersistentLongFile {
         loaded(false)
     {}
 
-    PersistentLongFile(string file, long defaultVal)
+    PersistentLongFile(const string& file, const long defaultVal)
         :
         file(file),
         defaultVal(defaultVal),

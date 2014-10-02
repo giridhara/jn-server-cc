@@ -84,7 +84,7 @@ public:
         checkFormatted();
         // get function below modifies argument only on successful execution
         return lastPromisedEpoch->get(ret);
-      }
+    }
 
     int getLastWriterEpoch(long& ret) {
         boost::recursive_mutex::scoped_lock lock(mMutex);

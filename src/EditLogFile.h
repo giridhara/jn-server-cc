@@ -20,8 +20,8 @@ namespace JournalServiceServer
 class EditLogFile
 {
 public:
-    EditLogFile(string fullFileName, long firstTxId,
-                    long lastTxId, bool inProgress)
+    EditLogFile(const string& fullFileName, const long firstTxId,
+                const long lastTxId, const bool inProgress)
         :
         fullFileName(fullFileName),
         firstTxId(firstTxId),

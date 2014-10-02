@@ -19,7 +19,7 @@ class RequestInfo {
         const long committedTxId;
 
     public :
-        RequestInfo(string jid, long epoch, long ipcSerialNumber, long committedTxId)
+        RequestInfo(const string& jid, const long epoch, const long ipcSerialNumber, const long committedTxId)
             :
             jid(jid),
             epoch(epoch),

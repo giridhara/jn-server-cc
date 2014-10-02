@@ -20,10 +20,6 @@
 namespace JournalServiceServer
 {
 
-FileJournalManager::~FileJournalManager()
-{
-}
-
 /**
  * Find all editlog segments starting at or above the given txid.
  * @param fromTxId the txnid which to start looking
@@ -218,28 +214,3 @@ int FileJournalManager::matchEditLogs(const string& dir,  const vector<string>& 
 }
 
 } /* namespace JournalServiceServer */
-
-//int main() {
-//    JournalServiceServer::JNStorage storage("/home/psarda/qfsbase/jn/data/sample-cluster-changed");
-//    JournalServiceServer::FileJournalManager fjm(storage);
-//    JournalServiceServer::EditLogFile elf;
-//    int rc = fjm.getLogFile(10, elf);
-//    if(rc == 0){
-//        if(elf.getFirstTxId() != -1) {
-//            cout << "first txid is " << elf.getFirstTxId() << endl;
-//            cout << "last txid is " << elf.getLastTxId() << endl;
-//        } else {
-//            cout << "there is no segment which starts at 10" << endl;
-//        }
-//    }else {
-//        cout << "result code is non zero" << endl;
-//    }
-//
-//    vector<JournalServiceServer::EditLogFile> elfv;
-//    fjm.getLogFiles(1, elfv);
-//
-//    for (vector<JournalServiceServer::EditLogFile>::iterator it = elfv.begin(); it != elfv.end(); ++it) {
-//        cout << "edit log file name is '" << (*it).getFile() << "'" << endl;
-//    }
-//
-//}

@@ -155,6 +155,12 @@ int replaceFile(const string& src, const string& target) {
 }
 
 int
+is_absolute_path(const string& path) {
+    boost::filesystem::path temp(path);
+    return !temp.root_directory().empty();
+}
+
+int
 try_to_acquire_lockfile(const string &lockfn)
 {
     const int fd = open(lockfn.c_str(), O_APPEND|O_CREAT|O_RDWR, 0644);

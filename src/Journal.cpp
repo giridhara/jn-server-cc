@@ -465,8 +465,6 @@ Journal::journal(const RequestInfo& reqInfo,
     }
     /* TODO :: every journanode irrespective of whether it is lagging or not
      * will flush the record to the disk. Might want to revisit this decision in future.
-    bool isLagging = lastTxnId <= ctid;
-    bool shouldFsync = !isLagging;
     */
     curSegment->writeRaw(records);
     if(!curSegment->flush()) {
@@ -814,8 +812,6 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
             return -1;
         }
 
-        //TODO: Didn't implement  txnRange function for now, hence had to do below two checks.
-        //Might have to revisit this decision in case it is used many times
         if(!currentSegment.has_endtxid()) {
             LOG.error("invalid segment: [%d, %d]", currentSegment.starttxid(), currentSegment.endtxid());
             abort();

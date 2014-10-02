@@ -16,16 +16,9 @@ namespace JournalServiceServer
 string JournalNodeHttpServer::listening_port = "";
 volatile int JournalNodeHttpServer::signal_received = 0;
 
-JournalNodeHttpServer::JournalNodeHttpServer()
-{
-    // TODO Auto-generated constructor stub
-    
-}
+JournalNodeHttpServer::JournalNodeHttpServer() {}
 
-JournalNodeHttpServer::~JournalNodeHttpServer()
-{
-    // TODO Auto-generated destructor stub
-}
+JournalNodeHttpServer::~JournalNodeHttpServer() {}
 
 void JournalNodeHttpServer::signal_handler(int sig_num) {
   signal_received = sig_num;

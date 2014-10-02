@@ -11,19 +11,12 @@
 #include <fstream>
 #include <stdio.h>
 #include <util/JNServiceMiscUtils.h>
-
-//new lines
-//#include "../../ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h"
-#include "/home/psarda/workspace/jn-server-cc/ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h"
-#include "/home/psarda/workspace/jn-server-cc/src/JournalNodeRpcServer.h"
+#include <ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h>
+#include <src/JournalNodeRpcServer.h>
 
 namespace icerpc
 {
 const string Server::server_config = "/tmp/config.server";
-
-Server::~Server()
-{
-}
 
 int
 Server::createConfigFile(){
@@ -34,18 +27,6 @@ Server::createConfigFile(){
     }
     myfile << protocol << ".Endpoints=tcp -h " << bind_address << " -p " << port <<"\n";
     myfile << "Ice.ThreadPool.Server.Size=" << num_handlers << "\n";
-//    Ice.Trace.Network=3
-//
-//    #
-//    # Protocol Tracing
-//    #
-//    # 0 = no protocol tracing
-//    # 1 = trace protocol messages
-//    #
-//    Ice.Trace.Protocol=1
-//    myfile << "Ice.Trace.Network=3" << "\n";
-//    myfile << "Ice.Trace.Protocol=1" << "\n";
-
     myfile.close();
     return 0;
 }
@@ -53,7 +34,6 @@ Server::createConfigFile(){
 bool
 Server::deleteConfigFile() {
     return JournalServiceServer::file_delete(server_config);
-//    return remove(server_config.c_str()) == 0;
 }
 
 void
@@ -104,11 +84,3 @@ Server::run(int argc, char*[]){
 }
 
 } /* namespace icerpc */
-
-//int main(int argc, char *argv[]){
-//    JournalServiceServer::QJournalProtocol* qjp= new JournalServiceServer::JournalNodeRpcServer();
-//    QJournalProtocolProtos::QJournalProtocolPBPtr instance = new JournalServiceServer::QJournalProtocolServerSideTranslatorPB(qjp);
-//    icerpc::Server server(instance, "QJournalProtocolPB", "localhost", 10000, 1);
-//    server.start();
-//    return 0;
-//}

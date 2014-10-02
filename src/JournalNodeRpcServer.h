@@ -18,12 +18,10 @@
 #include <util/JournalNodeConfigKeys.h>
 #include <boost/scoped_ptr.hpp>
 
-//forward declaration
-
-
 namespace JournalServiceServer
 {
 
+//forward declaration
 class JournalNode;
 
 class JournalNodeRpcServer : public QJournalProtocol

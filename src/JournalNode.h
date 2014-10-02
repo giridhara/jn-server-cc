@@ -73,6 +73,7 @@ public:
 
 private:
     int getLogDir(const string& jid, string& logDir);
+    void validateAndCreateJournalDir(const string& dir);
 
     Ice::PropertiesPtr conf;
     JournalNodeRpcServer* rpcServer;
@@ -87,8 +88,3 @@ extern scoped_ptr<JournalNode> global_jn;
 }
 
 #endif /* JOURNALNODE_H_ */
-
-
-//int main(){
-//
-//}
