@@ -311,10 +311,6 @@ Journal::getSegmentInfo(const long segmentTxId, hadoop::hdfs::SegmentStateProto&
     ssp.set_isinprogress(elf.isInProgress());
     isInitialized = true;
 
-    //TODO : Looks like i need to provide implementation for '<<' operator for EditLogFile,
-    //so that logging as done below is possible
-//    LOG.info("getSegmentInfo(" + segmentTxId + "): " + elf + " -> " +
-//        TextFormat.shortDebugString(ret));
     return 0;
 }
 
@@ -325,7 +321,6 @@ Journal::getSegmentInfo(const long segmentTxId, hadoop::hdfs::SegmentStateProto&
 int
 Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
       const int layoutVersion) {
-    LOG.info("Received request to start log segment from txid : %d", txid);
     boost::recursive_mutex::scoped_lock lock(mMutex);
     //TODO : Have to implement below assert.
     //assert fjm != null;
@@ -334,13 +329,9 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
         return -1;
     }
 
-    LOG.info("Done with check Formatted function");
-
     if (checkRequest(reqInfo) != 0) {
         return -1;
     }
-
-    LOG.info("Done with check Request function");
 
     if (curSegment) {
         ostringstream warnMsg;
@@ -381,8 +372,6 @@ Journal::startLogSegment(const RequestInfo& reqInfo, const long txid,
             LOG.error("The log file %s seems to contain valid transactions" , existing.getFile().c_str());
             abort();
         }
-    }else {
-        LOG.info("There is no segment starting at txid : %d", txid);
     }
 
     long curLastWriterEpoch;
@@ -538,7 +527,6 @@ Journal::prepareRecovery(
 
     if (isPRPDInitialized && !hasFinalizedSegment) {
         hadoop::hdfs::SegmentStateProto acceptedState = previouslyAccepted.segmentstate();
-        //TODO: converted java assert in to statement below, might have to revisit this decision.
         if(acceptedState.endtxid() != segInfo.endtxid()) {
             LOG.error("prev accepted: [%d, %d] \n on disk: [%d, %d]",
                     acceptedState.starttxid(), acceptedState.endtxid(),
@@ -657,7 +645,8 @@ int
 Journal::persistPaxosData(const long segmentTxId,
       hadoop::hdfs::PersistedRecoveryPaxosData& newData) {
     string f = storage.getPaxosFile(segmentTxId);
-    //TODO: trying to write atomically here by writing to .tmp file first; upon successful write renaming it to file without .tmp extension
+    //writing atomically here by writing to .tmp file first;
+    //upon successful write renaming it to file without .tmp extension
     string ftemp(f+".tmp");
     ofstream fos(ftemp.c_str(), ios::out | ios::trunc | ios::binary);
     if(!fos.is_open()) {
@@ -787,11 +776,6 @@ Journal::acceptRecovery(const RequestInfo& reqInfo,
     getSegmentInfo(segmentTxId, currentSegment, isCurrentSegmentInitialized);
     if (!isCurrentSegmentInitialized ||
         currentSegment.endtxid() != segment.endtxid()) {
-        if (!isCurrentSegmentInitialized)
-            LOG.info("curSegmentStateProto is not initialized");
-        else {
-            LOG.info("on disk end txid is %d different from endTxid in request %d", currentSegment.endtxid(), segment.endtxid());
-        }
       if (!isCurrentSegmentInitialized) {
         LOG.info("Synchronizing log [%d, %d]  : no current segment in place", segment.starttxid(), segment.endtxid());
 
@@ -897,8 +881,6 @@ Journal::syncLog(const RequestInfo& reqInfo,
     string tmpFile = storage.getSyncLogTemporaryFile(
         segment.starttxid(), reqInfo.getEpoch());
 
-    LOG.debug("trying to download edit log segment from url : %s", url.c_str());
-
     ofstream os(tmpFile.c_str());
     int responseCode= -1;
     try{
@@ -916,7 +898,6 @@ Journal::syncLog(const RequestInfo& reqInfo,
         LOG.error("exception raised while trying to download file %s from url %s", tmpFile.c_str(), url.c_str());
     }
     if (responseCode == 200) {
-        LOG.debug("successfully downloaded edit log segment from url : %s", url.c_str());
         ret = tmpFile;
     }else {
         LOG.error("unable to download file %s from url %s", tmpFile.c_str(), url.c_str());

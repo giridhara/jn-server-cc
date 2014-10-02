@@ -43,7 +43,7 @@ JournalNode::getOrCreateJournal(const string& jid, Journal*& journal) {
         string logDir;
         if(getLogDir(jid, logDir) != 0)
             return -1;
-        cout << "Initializing journal in directory " + logDir << endl;
+        LOG.info("Initializing journal in directory '%s'", logDir.c_str());
         journal = new Journal(conf, logDir, jid);
         if (!journal->isInitialized()) {
             delete journal;
@@ -93,7 +93,6 @@ JournalNode::start() {
     JournalNodeHttpServer::start_httpserver(ostr.str());
 
     rpcServer = new JournalNodeRpcServer(conf, *this);
-    //TODO : Commented out only for testing purpose. Uncomment once you are done
     rpcServer->start();
 }
 }

@@ -98,7 +98,7 @@ public:
         try{
             boost::filesystem::create_directories(dir);
         }catch (const boost::filesystem::filesystem_error& ex){
-            cout << ex.what() << '\n';
+            LOG.error("%s", ex.what());
             return -1;
         }
         return 0;

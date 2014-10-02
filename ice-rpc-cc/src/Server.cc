@@ -13,6 +13,7 @@
 #include <util/JNServiceMiscUtils.h>
 #include <ice-qjournal-protocol/QJournalProtocolServerSideTranslatorPB.h>
 #include <src/JournalNodeRpcServer.h>
+#include <util/Logger.h>
 
 namespace icerpc
 {
@@ -53,7 +54,7 @@ Server::stop() {
         assert (adapter != 0);
         adapter->getCommunicator()->shutdown();
         running = false;
-        cout << "Stopping journal node running at " << bind_address  << ":" << port << endl;
+        JournalServiceServer::LOG.info("Stopping journal node running at %s:%d", bind_address.c_str(), port);
         deleteConfigFile();
     }
 }
@@ -72,7 +73,7 @@ Server::run(int argc, char*[]){
     adapter->activate();
 
     running = true;
-    cout << "Started ICE based journal node at " + bind_address + ":" << port << endl;
+    JournalServiceServer::LOG.info("Started ICE based journal node at %s:%d",bind_address.c_str(), port);
 
     shutdownOnInterrupt();
 

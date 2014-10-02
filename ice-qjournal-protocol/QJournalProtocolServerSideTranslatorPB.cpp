@@ -26,7 +26,6 @@ QJournalProtocolServerSideTranslatorPB::isFormatted(const hadoop::hdfs::IsFormat
     throwExceptionOnError(ret);
 
     hadoop::hdfs::IsFormattedResponseProto resp;
-    cout << "response from QJournalProtocol impl is " << isFormatted << endl;
     resp.set_isformatted(isFormatted);
     return resp;
 }
@@ -98,7 +97,6 @@ QJournalProtocolServerSideTranslatorPB::prepareRecovery(const hadoop::hdfs::Prep
     hadoop::hdfs::PrepareRecoveryResponseProto resp;
     RequestInfo ri(req.reqinfo());
     int ret = impl->prepareRecovery(ri, req.segmenttxid(), resp);
-    cout << "contents of prepareRecovery response [lastwriterepoch, lastcommittedtxid] : [" << resp.lastwriterepoch() << ", " << resp.lastcommittedtxid() << "]"<< endl;
     throwExceptionOnError(ret);
     return resp;
 }

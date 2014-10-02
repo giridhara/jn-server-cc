@@ -41,8 +41,6 @@ JNClientInputStream::scanLog(string& filename, long& lastTxId, bool& hasHeaderCo
     }
     std::stringstream buffer;
     buffer << t.rdbuf();
-    cout << "data read from file is '" << buffer.str() << "'" << endl;
-    LOG.debug("length of data read from file is %d", buffer.str().length());
     JNClientInputStream in(buffer.str());
     t.close();
     if (in.mCurPosition == 0) {

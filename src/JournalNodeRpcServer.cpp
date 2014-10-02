@@ -117,20 +117,15 @@ JournalNodeRpcServer::getEditLogManifest(const string& jid, const long sinceTxId
 
     int numEle = elfv.size();
 
-    cout << "number of elf's in the vector after getEditLogManifest call is " << numEle << endl;
-
     hadoop::hdfs::RemoteEditLogManifestProto* relmp = new hadoop::hdfs::RemoteEditLogManifestProto();
 
     for(std::vector<EditLogFile>::iterator it = elfv.begin(); it != elfv.end(); ++it) {
-        cout << "returning following  elf to client [" << it->getFirstTxId() << "," << it->getLastTxId() << "]"  << "elf has corrupt header??" << it->hasCorruptHeader() << endl;
         hadoop::hdfs::RemoteEditLogProto* relp = new hadoop::hdfs::RemoteEditLogProto();
         relp->set_starttxid(it->getFirstTxId());
         relp->set_endtxid(it->getLastTxId());
         relp->set_isinprogress(it->isInProgress());
         relmp->mutable_logs()->AddAllocated(relp);
      }
-
-    cout << "following is the number of logs in RemoteEditLogManifestProto " << relmp->logs_size() << endl;
 
     ret.set_allocated_manifest(relmp);
     ret.set_httpport(jn.getPort());

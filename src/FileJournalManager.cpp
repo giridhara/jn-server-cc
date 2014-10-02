@@ -30,7 +30,6 @@ namespace JournalServiceServer
  */
 int
 FileJournalManager::getRemoteEditLogs(const long firstTxId, const bool inProgressOk, vector<EditLogFile>& ret) {
-    cout << "got request to find all edit log segments after " << firstTxId << " in progress segments are also fine ?" << inProgressOk << endl;
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
     if (matchEditLogs(currentDir, allLogFiles) != 0) {
@@ -99,7 +98,6 @@ FileJournalManager::finalizeLogSegment(const long firstTxId, const long lastTxId
 int
 FileJournalManager::getLogFiles(const long fromTxId, vector<EditLogFile>& ret){
     boost::recursive_mutex::scoped_lock lock(mMutex);
-    cout << "getting all logs from txid : " << fromTxId << endl;
     string currentDir = jnStorage.getCurrentDir();
     vector<EditLogFile> allLogFiles;
     if(matchEditLogs(currentDir, allLogFiles) != 0){
@@ -109,7 +107,6 @@ FileJournalManager::getLogFiles(const long fromTxId, vector<EditLogFile>& ret){
     for (vector<EditLogFile>::iterator it = allLogFiles.begin(); it != allLogFiles.end(); ++it) {
         if (fromTxId <= (*it).getFirstTxId() ||
                 (*it).containsTxId(fromTxId)) {
-//            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
             ret.push_back(*it);
         }
     }
@@ -133,7 +130,6 @@ FileJournalManager::getLogFile(const string& dir, const long startTxId, EditLogF
     vector<EditLogFile > retEditLogFile;
     for (vector<EditLogFile>::iterator it = matchedEditLogs.begin(); it != matchedEditLogs.end(); ++it) {
         if (it->getFirstTxId() == startTxId) {
-//            cout << "pushing elf[ " << it->getFirstTxId() << "," << it->getLastTxId() << "]" << endl;
             retEditLogFile.push_back(*it);
         }
     }
@@ -143,7 +139,6 @@ FileJournalManager::getLogFile(const string& dir, const long startTxId, EditLogF
         return 0;
     } else if (retEditLogFile.size() == 1) {
         result = retEditLogFile.front();  //  assignment operator of EditLogFile function is called
-        //retEditLogFile.front();
         return 0;
     }
 
